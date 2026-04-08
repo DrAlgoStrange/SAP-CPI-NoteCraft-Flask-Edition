@@ -11,6 +11,7 @@ import threading
 import time
 import uuid
 import os
+import sys
 
 BASE_DIR = os.environ.get('FLASK_BASE_DIR', os.path.dirname(os.path.abspath(__file__)))
 
