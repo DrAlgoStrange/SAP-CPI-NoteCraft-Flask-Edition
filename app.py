@@ -12,8 +12,15 @@ import time
 import uuid
 import os
 
-app = Flask(__name__)
-CORS(app)
+BASE_DIR = os.environ.get('FLASK_BASE_DIR', os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__, 
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static') if os.path.exists(os.path.join(BASE_DIR, 'static')) else None
+)
+
+# Also fix DATA_DIR and groovy runner path to use exe's folder, not _MEIPASS
+DATA_DIR = os.path.join(os.path.dirname(sys.executable if getattr(sys,'frozen',False) else __file__), 'data')
 
 # ─────────────────────────────────────────────
 # SCHEDULER STORE (in-memory, per server session)
