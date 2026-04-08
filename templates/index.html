@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteCraft</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --sidebar-nav: #161b22;
+  --sidebar: #13202f;
+  --panel: #0d1824;
+  --surface: #1c2b3a;
+  --surface2: #1a2535;
+  --border: #243447;
+  --accent: #e94560;
+  --accent2: #f0ab00;
+  --accent3: #00c4cc;
+  --text: #cdd9e5;
+  --muted: #5d7795;
+  --success: #3fb950;
+  --warning: #d29922;
+  --danger: #f85149;
+  --info: #388bfd;
+  --mono: 'Consolas','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;height:100vh;display:flex;overflow:hidden;font-size:13px}
+
+/* ── Nav sidebar ── */
+.nav{width:52px;background:var(--sidebar-nav);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px;flex-shrink:0;z-index:100}
+.nav-logo{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:12px;cursor:default;user-select:none}
+.nav-btn{width:40px;height:40px;background:none;border:none;border-radius:8px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:19px;transition:all .15s;position:relative}
+.nav-btn:hover{background:var(--surface);color:var(--text)}
+.nav-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 12px rgba(233,69,96,.4)}
+.nav-tip{position:absolute;left:52px;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:11px;white-space:nowrap;color:var(--text);z-index:9999;display:none;pointer-events:none}
+.nav-btn:hover .nav-tip{display:block}
+
+/* ── Main ── */
+.main{flex:1;display:flex;overflow:hidden}
+.panel{display:none;flex:1;overflow:hidden;flex-direction:column}
+.panel.active{display:flex}
+
+/* ══════════════════════════════
+   NOTES
+══════════════════════════════ */
+#notes-panel{flex-direction:row!important}
+.nb-sidebar{width:200px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-hdr{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sidebar-hdr-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:600}
+.icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:3px 6px;border-radius:4px;line-height:1}
+.icon-btn:hover{background:var(--surface2);color:var(--text)}
+.nb-list,.pg-list{flex:1;overflow-y:auto;padding:5px}
+.nb-item,.pg-item{padding:7px 10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:7px;margin-bottom:1px;position:relative}
+.nb-item:hover,.pg-item:hover{background:var(--surface2)}
+.nb-item.active{background:var(--accent)!important;color:#fff}
+.pg-item.active{background:var(--surface)!important}
+.item-name{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-menu{background:none;border:none;color:inherit;cursor:pointer;opacity:0;font-size:15px;padding:1px 5px;border-radius:3px;line-height:1}
+.nb-item:hover .item-menu,.nb-item.active .item-menu,
+.pg-item:hover .item-menu,.pg-item.active .item-menu{opacity:.7}
+.item-menu:hover{opacity:1!important;background:rgba(255,255,255,.15)}
+
+.pg-sidebar{width:175px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.note-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.note-toolbar{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--sidebar);display:flex;align-items:center;gap:8px}
+.note-title-in{flex:1;background:none;border:none;color:var(--text);font-size:15px;font-weight:600;outline:none}
+.note-content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.note-content textarea{flex:1;width:100%;background:none;border:none;color:var(--text);font-size:13.5px;line-height:1.75;resize:none;outline:none;padding:18px 24px;font-family:inherit}
+
+/* ══════════════════════════════
+   BEAUTIFIER
+══════════════════════════════ */
+#beautify-panel{flex-direction:column}
+.bfy-toolbar{padding:10px 18px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.bfy-toolbar h2{font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:.5px}
+.mode-pills{display:flex;gap:4px}
+.pill{padding:5px 14px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:600;border:1px solid var(--border);background:none;color:var(--muted);transition:all .15s}
+.pill.active{background:var(--accent2);color:#000;border-color:var(--accent2)}
+.bfy-body{display:flex;flex:1;overflow:hidden}
+.bfy-pane{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+.bfy-pane:last-child{border-right:none}
+.pane-hdr{padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.code-area{flex:1;overflow:auto;padding:0}
+.code-area textarea,.code-area pre{width:100%;height:100%;min-height:100%;background:none;border:none;color:#79c0ff;font-family:var(--mono);font-size:12px;line-height:1.65;resize:none;outline:none;padding:12px 14px}
+.code-area pre{color:#a5f3fc;white-space:pre-wrap;word-break:break-word}
+
+/* ══════════════════════════════
+   XSD GENERATOR
+══════════════════════════════ */
+#xsd-panel{flex-direction:column}
+.xsd-toolbar{padding:10px 18px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.xsd-toolbar h2{font-size:13px;font-weight:700;color:var(--accent2)}
+.xsd-opts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.xsd-opts label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer}
+.xsd-opts input[type=text]{background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 9px;font-size:12px;outline:none;width:210px}
+.xsd-opts input[type=text]:focus{border-color:var(--accent)}
+.xsd-opts input[type=checkbox]{accent-color:var(--accent);cursor:pointer}
+.xsd-body{display:flex;flex:1;overflow:hidden}
+
+/* ══════════════════════════════
+   PAYLOAD COMPARATOR
+══════════════════════════════ */
+#payload-panel{flex-direction:column}
+.pay-toolbar{padding:9px 16px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.pay-toolbar h2{font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:.5px}
+.stats-bar{margin-left:auto;font-size:11px;font-family:var(--mono);display:flex;gap:14px}
+.stat-r{color:var(--danger)}.stat-l{color:var(--warning)}.stat-m{color:var(--accent2)}
+.legend-bar{padding:5px 14px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;gap:18px;font-size:11px;align-items:center}
+.legend-dot{width:11px;height:11px;border-radius:2px;display:inline-block;margin-right:4px}
+.pay-body{display:flex;flex:1;overflow:hidden}
+.pay-pane{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+.pay-pane-hdr{padding:7px 12px;background:var(--panel);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted)}
+.pay-editor{flex:1;overflow:auto;position:relative}
+/* Line-based editor */
+.pay-editor-lines{height:100%;font-family:var(--mono);font-size:12px;line-height:1.6;overflow:auto}
+.pay-line{padding:0 12px;white-space:pre;display:flex;align-items:center;min-height:19.2px}
+.pay-line.hl-missing{background:rgba(248,81,73,.22);border-left:3px solid var(--danger)}
+.pay-line.hl-mismatch{background:rgba(240,171,0,.15);border-left:3px solid var(--warning)}
+.pay-line.hl-none{border-left:3px solid transparent}
+.pay-raw{width:100%;height:100%;background:none;border:none;color:#79c0ff;font-family:var(--mono);font-size:12px;line-height:1.6;resize:none;outline:none;padding:10px 12px}
+
+.diff-pane{width:310px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border)}
+.diff-hdr{padding:7px 12px;background:var(--panel);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted)}
+.diff-content{flex:1;overflow-y:auto;padding:8px}
+.diff-section{margin-bottom:14px}
+.diff-sec-title{font-size:10px;font-family:var(--mono);color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:6px;letter-spacing:.5px}
+.diff-sec-title::before,.diff-sec-title::after{content:'——';opacity:.35}
+.diff-item{padding:5px 10px;border-radius:4px;font-family:var(--mono);font-size:11px;display:flex;align-items:flex-start;gap:6px;margin-bottom:3px;word-break:break-all;cursor:pointer;transition:opacity .1s}
+.diff-item:hover{opacity:.8}
+.diff-item.di-missing{background:rgba(248,81,73,.14);color:#fca5a5;border-left:3px solid var(--danger)}
+.diff-item.di-mismatch{background:rgba(240,171,0,.1);color:#fcd34d;border-left:3px solid var(--warning)}
+.diff-icon{flex-shrink:0;font-size:12px}
+
+/* ══════════════════════════════
+   API TESTER
+══════════════════════════════ */
+#api-panel{flex-direction:row!important}
+.api-saved{width:215px;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.api-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.api-url-bar{padding:10px 14px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.method-sel{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono);font-weight:700;padding:7px 8px;outline:none;cursor:pointer;min-width:86px}
+.url-in{flex:1;min-width:200px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono);padding:7px 12px;outline:none}
+.url-in:focus{border-color:var(--accent)}
+.small-label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap}
+.small-label input[type=checkbox]{accent-color:var(--accent)}
+.count-in{width:62px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:7px 6px;outline:none;text-align:center}
+.btn-save-req{padding:7px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;cursor:pointer}
+.btn-save-req:hover{color:var(--text);border-color:var(--muted)}
+.btn-send{padding:7px 20px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.btn-send:hover{opacity:.85}
+.btn-send:disabled{opacity:.5;cursor:not-allowed}
+
+.req-tabs,.resp-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel)}
+.req-tab,.resp-tab{padding:8px 15px;cursor:pointer;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s}
+.req-tab.active,.resp-tab.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+.req-tab:hover,.resp-tab:hover{color:var(--text)}
+
+.req-tab-content{overflow:hidden;display:flex;flex-direction:column}
+.tab-pane{display:none;flex:1;flex-direction:column;overflow:auto;padding:12px 14px}
+.tab-pane.active{display:flex}
+
+.kv-table{width:100%;border-collapse:collapse;font-size:12px}
+.kv-table th{text-align:left;padding:5px 6px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.kv-table td{padding:3px 3px;border-bottom:1px solid rgba(255,255,255,.03)}
+.kv-in{width:100%;background:var(--surface2);border:1px solid transparent;border-radius:4px;color:var(--text);padding:5px 7px;font-size:12px;outline:none;font-family:var(--mono)}
+.kv-in:focus{border-color:var(--accent)}
+.kv-table input[type=checkbox]{accent-color:var(--accent)}
+.add-row{margin-top:7px;padding:4px 10px;background:none;border:1px dashed var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:11px}
+.add-row:hover{border-color:var(--accent);color:var(--accent)}
+.del-row{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 5px;border-radius:3px;font-size:13px}
+.del-row:hover{color:var(--danger)}
+
+.body-types{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.btype-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s}
+.btype-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.body-ta{width:100%;flex:1;min-height:180px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#79c0ff;font-family:var(--mono);font-size:12px;padding:10px;resize:none;outline:none}
+.body-ta:focus{border-color:var(--accent)}
+
+.auth-sel{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 12px;font-size:12px;outline:none;margin-bottom:12px;width:100%;max-width:280px}
+.auth-field-group{margin-bottom:9px}
+.auth-field-group label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.auth-field-group input{width:100%;max-width:380px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:7px 10px;font-size:12px;outline:none;font-family:var(--mono)}
+.auth-field-group input:focus{border-color:var(--accent)}
+
+.resp-area{display:none;flex-direction:column;border-top:2px solid var(--border);overflow:hidden}
+.resp-resize-handle{height:5px;background:var(--border);cursor:ns-resize;flex-shrink:0;position:relative;z-index:10}
+.resp-resize-handle:hover,.resp-resize-handle.dragging{background:var(--accent2)}
+.resp-hdr{padding:7px 14px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;font-size:11px;flex-wrap:wrap}
+.status-badge{padding:2px 9px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:11px}
+.s2xx{background:rgba(63,185,80,.15);color:#3fb950}.s3xx{background:rgba(56,139,253,.15);color:#388bfd}
+.s4xx{background:rgba(248,81,73,.15);color:#f85149}.s5xx{background:rgba(248,81,73,.15);color:#f85149}
+.resp-body-wrap{flex:1;overflow:auto;padding:10px 14px;font-family:var(--mono);font-size:12px;color:#a5f3fc;white-space:pre-wrap}
+.resp-hdrs-wrap{flex:1;overflow:auto;padding:10px 14px}
+.resp-hdrs-wrap table{width:100%;border-collapse:collapse;font-size:12px}
+.resp-hdrs-wrap th{text-align:left;padding:5px 7px;color:var(--muted);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.resp-hdrs-wrap td{padding:5px 7px;border-bottom:1px solid rgba(255,255,255,.03);font-family:var(--mono);font-size:11px}
+.resp-hdrs-wrap td:first-child{color:var(--accent2)}
+.multi-wrap{flex:1;overflow:auto;padding:10px}
+.multi-item{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 11px;margin-bottom:5px;font-family:var(--mono);font-size:11px;display:flex;gap:10px;align-items:center}
+
+.saved-req-item{padding:8px 10px;border-radius:6px;cursor:pointer;margin-bottom:3px;border:1px solid transparent}
+.saved-req-item:hover{background:var(--surface2);border-color:var(--border)}
+.req-badge{font-size:10px;font-family:var(--mono);font-weight:700}
+.req-name{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.mGET{color:#3fb950}.mPOST{color:#388bfd}.mPUT{color:#d29922}.mDELETE{color:#f85149}.mPATCH{color:#a371f7}
+
+/* Collection tree */
+.col-item{border-radius:6px;margin-bottom:2px;border:1px solid transparent}
+.col-header{display:flex;align-items:center;gap:5px;padding:7px 8px;cursor:pointer;border-radius:6px;user-select:none}
+.col-header:hover{background:var(--surface2)}
+.col-header.active-col{background:rgba(233,69,96,.12);border-color:rgba(233,69,96,.25)}
+.col-arrow{font-size:10px;color:var(--muted);transition:transform .15s;width:12px;flex-shrink:0}
+.col-arrow.open{transform:rotate(90deg)}
+.col-name{flex:1;font-size:11px;font-weight:600;color:var(--accent2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:1px 4px;border-radius:3px;opacity:0;line-height:1}
+.col-header:hover .col-menu-btn{opacity:.7}
+.col-menu-btn:hover{opacity:1!important;color:var(--text)}
+.col-children{padding-left:14px;border-left:1px solid var(--border);margin-left:10px;display:none}
+.col-children.open{display:block}
+.col-req-item{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:5px;cursor:pointer;margin-bottom:1px}
+.col-req-item:hover{background:var(--surface2)}
+.col-req-item.active{background:var(--surface);border-left:2px solid var(--accent)}
+.col-req-badge{font-size:9px;font-family:var(--mono);font-weight:700;min-width:34px}
+.col-req-name{flex:1;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-req-menu{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:1px 4px;opacity:0;line-height:1}
+.col-req-item:hover .col-req-menu{opacity:.7}
+.col-toolbar{padding:6px 8px;border-bottom:1px solid var(--border);display:flex;gap:4px}
+.col-toolbar button{flex:1;padding:4px 0;font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer}
+.col-toolbar button:hover{color:var(--text);border-color:var(--muted)}
+
+/* Multi-payload */
+.payload-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.payload-item{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;cursor:pointer}
+.payload-item:hover{border-color:var(--muted)}
+.payload-item.active-pl{border-color:var(--accent);background:rgba(233,69,96,.08)}
+.payload-item-name{flex:1;font-size:11px;font-family:var(--mono)}
+.payload-item-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:1px 4px;border-radius:3px}
+.payload-item-del:hover{color:var(--danger)}
+.payload-toolbar{display:flex;gap:5px;margin-bottom:8px;align-items:center}
+
+/* cURL modal */
+.curl-modal{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;min-width:500px;max-width:700px;width:92%}
+.curl-pre{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;font-family:var(--mono);font-size:11px;color:#86efac;white-space:pre-wrap;word-break:break-all;max-height:320px;overflow-y:auto;margin:10px 0}
+
+/* Scheduler */
+.sched-panel{padding:10px 12px;border-top:1px solid var(--border);background:var(--panel)}
+.sched-hdr{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.sched-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.sched-in{width:72px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:5px 7px;font-size:12px;outline:none;text-align:center}
+.sched-log{background:#090e14;border:1px solid var(--border);border-radius:5px;padding:7px;font-family:var(--mono);font-size:10.5px;max-height:100px;overflow-y:auto;color:#86efac;white-space:pre-wrap;line-height:1.5;display:none}
+.sched-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;font-family:var(--mono)}
+.sb-run{background:rgba(63,185,80,.15);color:#3fb950}
+.sb-stop{background:rgba(248,81,73,.1);color:#f85149}
+.sb-done{background:rgba(56,139,253,.1);color:#388bfd}
+
+/* ══════════════════════════════
+   SOLACE
+══════════════════════════════ */
+#solace-panel{flex-direction:column}
+.sol-scroll{flex:1;overflow-y:auto;padding:22px 0}
+.sol-body{max-width:680px;margin:0 auto;padding:0 20px}
+.sol-title{font-size:15px;font-weight:700;color:var(--accent2);margin-bottom:18px;display:flex;align-items:center;gap:9px}
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-weight:600}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 11px;font-size:13px;outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg textarea{font-family:var(--mono);font-size:12px;color:#79c0ff;resize:vertical;min-height:90px}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sol-log{background:#090e14;border:1px solid var(--border);border-radius:7px;padding:11px;font-family:var(--mono);font-size:11.5px;min-height:90px;max-height:180px;overflow-y:auto;color:#86efac;white-space:pre-wrap;margin-top:10px;line-height:1.6}
+.li{color:#60a5fa}.ls{color:#3fb950}.le{color:#f85149}.lw{color:#d29922}
+.info-box{margin-top:12px;padding:11px 14px;background:rgba(240,171,0,.07);border:1px solid rgba(240,171,0,.2);border-radius:7px;font-size:12px;color:#d29922;line-height:1.6}
+
+/* ══════════════════════════════
+   COMMON
+══════════════════════════════ */
+.btn{padding:7px 15px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}.btn-secondary:hover{border-color:var(--muted)}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{opacity:.85}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-accent2{background:var(--accent2);color:#000}.btn-accent2:hover{opacity:.85}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Context menu */
+.ctx{position:fixed;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:9999;min-width:155px;box-shadow:0 8px 28px rgba(0,0,0,.6)}
+.ctx-item{padding:8px 12px;cursor:pointer;border-radius:5px;font-size:12px;display:flex;align-items:center;gap:7px}
+.ctx-item:hover{background:var(--surface)}
+.ctx-item.danger{color:var(--danger)}.ctx-item.danger:hover{background:rgba(248,81,73,.1)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:10000;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;min-width:300px;max-width:440px;width:90%}
+.modal h3{font-size:14px;margin-bottom:14px}
+.modal input{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:13px;outline:none;margin-bottom:12px}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+
+select option{background:var(--surface2)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ══════════════════════════════
+   GROOVY CPI SIMULATOR
+══════════════════════════════ */
+#groovy-panel{flex-direction:column}
+.gv-toolbar{padding:8px 14px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.gv-toolbar h2{font-size:13px;font-weight:700;color:#3fb950;letter-spacing:.5px;white-space:nowrap}
+.cvt-toolbar{padding:10px 18px;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cvt-toolbar h2{font-size:13px;font-weight:700;color:var(--accent2);letter-spacing:.5px}
+.cvt-body{display:flex;flex:1;overflow:hidden;min-height:0}
+.cvt-pane{display:flex;flex-direction:column;flex:1;min-width:0;overflow:hidden}
+.cvt-pane+.cvt-pane{border-left:1px solid var(--border)}
+.cvt-root-label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.cvt-root-label input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;padding:3px 7px;width:110px}
+.gv-body{display:flex;flex:1;overflow:hidden}
+/* Columns */
+.gv-col{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.gv-col:last-child{border-right:none}
+.gv-col-input{width:22%}
+.gv-col-script{flex:1}
+.gv-col-output{width:22%}
+/* Col headers */
+.gv-col-hdr{padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.gv-col-hdr span{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:400}
+/* Sub-panels inside input/output cols */
+.gv-sub{display:flex;flex-direction:column;border-bottom:1px solid var(--border)}
+.gv-sub-hdr{padding:6px 12px;background:var(--surface2);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:600;flex-shrink:0}
+.gv-sub-body{padding:8px 10px;flex:1;overflow-y:auto}
+/* Body textarea */
+.gv-body-ta{width:100%;min-height:120px;background:var(--panel);border:1px solid var(--border);border-radius:5px;color:#79c0ff;font-family:var(--mono);font-size:11.5px;line-height:1.55;resize:vertical;outline:none;padding:8px 10px}
+.gv-body-ta:focus{border-color:var(--accent3)}
+/* KV rows */
+.gv-kv-row{display:flex;gap:4px;margin-bottom:5px;align-items:center}
+.gv-kv-key{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:4px 7px;font-size:11px;outline:none;font-family:var(--mono)}
+.gv-kv-val{flex:1.3;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:#a5f3fc;padding:4px 7px;font-size:11px;outline:none;font-family:var(--mono)}
+.gv-kv-key:focus,.gv-kv-val:focus{border-color:var(--accent3)}
+.gv-kv-rm{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 5px;border-radius:3px;line-height:1}
+.gv-kv-rm:hover{background:rgba(248,81,73,.15)}
+.gv-add-btn{width:100%;background:none;border:1px dashed var(--border);border-radius:4px;color:var(--muted);cursor:pointer;padding:4px;font-size:11px;margin-top:4px;transition:all .15s}
+.gv-add-btn:hover{border-color:var(--accent3);color:var(--accent3)}
+/* Script area */
+.gv-script-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.gv-script-hdr{padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.gv-script-title{font-size:12px;font-weight:700;color:var(--text)}
+.gv-share-btn{margin-left:auto;padding:4px 12px;background:var(--accent3);color:#000;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.gv-share-btn:hover{opacity:.85}
+.gv-script-ta{flex:1;width:100%;background:#0d1117;border:none;color:#c9d1d9;font-family:var(--mono);font-size:12px;line-height:1.65;resize:none;outline:none;padding:12px 14px;overflow:auto}
+.gv-script-ta::selection{background:rgba(56,139,253,.4)}
+.gv-fn-bar{padding:8px 14px;background:var(--sidebar);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.gv-fn-label{font-size:12px;color:var(--muted);white-space:nowrap}
+.gv-fn-input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:5px 9px;font-size:12px;outline:none;width:160px;font-family:var(--mono)}
+.gv-fn-input:focus{border-color:var(--accent3)}
+.gv-exec-btn{padding:7px 18px;background:var(--accent3);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.gv-exec-btn:hover{opacity:.85}
+.gv-exec-btn:active{transform:scale(.97)}
+.gv-exec-btn.running{background:var(--muted);cursor:not-allowed}
+/* Console */
+.gv-console-wrap{flex-shrink:0;height:130px;display:flex;flex-direction:column;border-top:1px solid var(--border)}
+.gv-console-hdr{padding:6px 14px;background:var(--panel);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);flex-shrink:0}
+.gv-console-body{flex:1;overflow-y:auto;padding:8px 14px;font-family:var(--mono);font-size:11.5px;color:#86efac;line-height:1.6;background:#0d1117;white-space:pre-wrap}
+/* Output col */
+.gv-out-body-text{font-family:var(--mono);font-size:11.5px;color:#a5f3fc;white-space:pre-wrap;word-break:break-all;line-height:1.55;padding:8px 10px;min-height:80px;background:var(--panel);border:1px solid var(--border);border-radius:5px}
+.gv-out-empty{color:var(--muted);font-size:11px;font-style:italic}
+.gv-out-kv{margin-bottom:4px;font-size:11.5px;font-family:var(--mono)}
+.gv-out-kv .gv-ok{color:#a5f3fc}.gv-out-kv .gv-ov{color:#fbbf24}
+.gv-error-box{background:rgba(248,81,73,.1);border:1px solid var(--danger);border-radius:5px;padding:8px 10px;color:var(--danger);font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<div class="nav">
+  <div class="nav-logo">✦</div>
+  <button class="nav-btn active" onclick="sw('notes')"><span>📓</span><span class="nav-tip">Notes</span></button>
+  <button class="nav-btn" onclick="sw('beautify')"><span>✨</span><span class="nav-tip">Beautifier</span></button>
+  <button class="nav-btn" onclick="sw('xsd')"><span>{}</span><span class="nav-tip">XSD Generator</span></button>
+  <button class="nav-btn" onclick="sw('payload')"><span>⇄</span><span class="nav-tip">Payload Comparator</span></button>
+  <button class="nav-btn" onclick="sw('api')"><span>⚡</span><span class="nav-tip">API Tester</span></button>
+  <button class="nav-btn" onclick="sw('solace')"><span>☁</span><span class="nav-tip">Solace Tester</span></button>
+  <button class="nav-btn" onclick="sw('groovy')"><span>🟩</span><span class="nav-tip">Groovy Simulator</span></button>
+  <button class="nav-btn" onclick="sw('converter')"><span>🔄</span><span class="nav-tip">JSON ↔ XML Converter</span></button>
+  <div style="flex:1"></div>
+  <div style="font-size:9px;color:var(--muted);font-family:var(--mono);padding:4px">NC</div>
+</div>
+
+<div class="main">
+
+<!-- ══ NOTES ══ -->
+<div id="notes-panel" class="panel active">
+  <div class="nb-sidebar">
+    <div class="sidebar-hdr">
+      <span class="sidebar-hdr-label">Notebooks</span>
+      <button class="icon-btn" onclick="addNotebook()" title="New Notebook">+</button>
+    </div>
+    <div class="nb-list" id="nb-list"></div>
+  </div>
+  <div class="pg-sidebar">
+    <div class="sidebar-hdr">
+      <span class="sidebar-hdr-label" id="pg-hdr">Pages</span>
+      <div style="display:flex;gap:3px">
+        <button class="icon-btn" onclick="addPage()">+</button>
+        <button class="icon-btn" onclick="exportNotebook()" title="Export notebook as .txt" style="font-size:12px">📁</button>
+      </div>
+    </div>
+    <div class="pg-list" id="pg-list"></div>
+  </div>
+  <div class="note-area">
+    <div class="note-toolbar">
+      <input class="note-title-in" id="note-title" placeholder="Page title…" oninput="saveNote()">
+      <button class="btn btn-secondary btn-sm" onclick="savePageTxt()">💾 .txt</button>
+    </div>
+    <div class="note-content">
+      <textarea id="note-body" placeholder="Start writing…" oninput="saveNote()"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BEAUTIFIER ══ -->
+<div id="beautify-panel" class="panel">
+  <div class="bfy-toolbar">
+    <h2>✨ Beautifier</h2>
+    <div class="mode-pills">
+      <button class="pill active" id="bfy-json-pill" onclick="setBfyMode('json',this)">JSON</button>
+      <button class="pill" id="bfy-xml-pill" onclick="setBfyMode('xml',this)">XML</button>
+    </div>
+    <button class="btn btn-accent2 btn-sm" onclick="beautify()">Beautify</button>
+    <button class="btn btn-secondary btn-sm" onclick="minify()">Minify</button>
+    <button class="btn btn-secondary btn-sm" onclick="copyBfy()">Copy Output</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearBfy()">Clear</button>
+  </div>
+  <div class="bfy-body">
+    <div class="bfy-pane">
+      <div class="pane-hdr"><span>Input</span></div>
+      <div class="code-area"><textarea id="bfy-in" spellcheck="false" placeholder="Paste JSON or XML here…" oninput="saveBfyState()"></textarea></div>
+    </div>
+    <div class="bfy-pane">
+      <div class="pane-hdr"><span>Output</span><span id="bfy-status" style="font-size:10px;color:var(--success)"></span></div>
+      <div class="code-area"><pre id="bfy-out"></pre></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ XSD GENERATOR ══ -->
+<div id="xsd-panel" class="panel">
+  <div class="xsd-toolbar">
+    <h2>⚙ XSD Generator</h2>
+    <div class="xsd-opts">
+      <label><input type="checkbox" id="xsd-use-ns" checked onchange="toggleNS()"> Use Namespace</label>
+      <label id="ns-field-label">Namespace: <input type="text" id="xsd-ns" value="http://www.example.com/schema"></label>
+      <label><input type="checkbox" id="xsd-req" checked> All Required</label>
+      <label><input type="checkbox" id="xsd-unb"> Arrays Unbounded</label>
+    </div>
+    <div style="display:flex;gap:6px;margin-left:auto">
+      <button class="btn btn-accent2 btn-sm" onclick="genXSD()">Generate XSD</button>
+      <button class="btn btn-secondary btn-sm" onclick="copyXSD()">Copy</button>
+      <button class="btn btn-secondary btn-sm" onclick="dlXSD()">⬇ .xsd</button>
+    </div>
+  </div>
+  <div class="xsd-body">
+    <div class="bfy-pane">
+      <div class="pane-hdr"><span>Input XML / JSON</span><button class="btn btn-secondary btn-sm" onclick="document.getElementById('xsd-in').value='';document.getElementById('xsd-out').textContent=''">Clear</button></div>
+      <div class="code-area"><textarea id="xsd-in" spellcheck="false" placeholder="Paste XML or JSON payload here…&#10;&#10;Supports both formats. The generated XSD will be&#10;compatible with SAP CPI message mapping." oninput="saveXsdState()"></textarea></div>
+    </div>
+    <div class="bfy-pane">
+      <div class="pane-hdr"><span>Generated XSD (SAP CPI Compatible)</span><span id="xsd-err" style="color:var(--danger);font-size:11px"></span></div>
+      <div class="code-area"><pre id="xsd-out" style="color:#86efac"></pre></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAYLOAD COMPARATOR ══ -->
+<div id="payload-panel" class="panel">
+  <div class="pay-toolbar">
+    <h2>◈ PAYLOAD COMPARATOR</h2>
+    <div class="mode-pills">
+      <button class="pill active" id="pay-json-pill" onclick="setPayMode('JSON',this)">JSON</button>
+      <button class="pill" id="pay-xml-pill" onclick="setPayMode('XML',this)">XML</button>
+    </div>
+    <div class="stats-bar" id="pay-stats"></div>
+    <div style="display:flex;gap:6px;margin-left:auto">
+      <button class="btn btn-secondary btn-sm" onclick="clearPay()">✕ Clear</button>
+      <button class="btn btn-primary btn-sm" onclick="doCmp()">⇄ Compare</button>
+    </div>
+  </div>
+  <div class="legend-bar">
+    <span><span class="legend-dot" style="background:rgba(248,81,73,.55)"></span>Missing field</span>
+    <span><span class="legend-dot" style="background:rgba(240,171,0,.45)"></span>Value mismatch</span>
+  </div>
+  <div class="pay-body">
+    <div class="pay-pane">
+      <div class="pay-pane-hdr">PAYLOAD LEFT</div>
+      <div class="pay-editor">
+        <div id="pay-left-lines" class="pay-editor-lines" style="display:none"></div>
+        <textarea id="pay-left" class="pay-raw" spellcheck="false" placeholder="Paste left payload…" oninput="savePayState()"></textarea>
+      </div>
+    </div>
+    <div class="diff-pane">
+      <div class="diff-hdr">DIFF REPORT</div>
+      <div class="diff-content" id="diff-out"><p style="color:var(--muted);font-size:12px;padding:6px">Click Compare to see differences.</p></div>
+    </div>
+    <div class="pay-pane">
+      <div class="pay-pane-hdr">PAYLOAD RIGHT</div>
+      <div class="pay-editor">
+        <div id="pay-right-lines" class="pay-editor-lines" style="display:none"></div>
+        <textarea id="pay-right" class="pay-raw" spellcheck="false" placeholder="Paste right payload…" oninput="savePayState()"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ API TESTER ══ -->
+<div id="api-panel" class="panel">
+  <!-- Collections sidebar -->
+  <div class="api-saved">
+    <div class="col-toolbar">
+      <button onclick="addCollection()" title="New Collection">📁 New Collection</button>
+      <button onclick="newReq()" title="New uncollected request">＋ Request</button>
+      <button onclick="importBrunoFile()" title="Import Bruno .bru file">⬆ Import .bru</button>
+    </div>
+    <div class="nb-list" id="saved-list" style="padding:5px"></div>
+  </div>
+  <div class="api-main">
+    <div class="api-url-bar">
+      <select class="method-sel" id="api-meth" onchange="capAPI()">
+        <option>GET</option><option>POST</option><option>PUT</option>
+        <option>DELETE</option><option>PATCH</option><option>HEAD</option><option>OPTIONS</option>
+      </select>
+      <input class="url-in" id="api-url" placeholder="https://api.example.com/endpoint" oninput="capAPI()">
+      <label class="small-label"><input type="checkbox" id="api-ssl" checked onchange="capAPI()"> SSL</label>
+      <input class="count-in" id="api-cnt" type="number" value="1" min="1" max="100" title="Parallel requests" onchange="capAPI()">
+      <button class="btn-save-req" onclick="saveReqToCollection()">💾 Save</button>
+      <button class="btn-save-req" onclick="showCurlModal()" title="Show cURL command">⌘ cURL</button>
+      <button class="btn-save-req" onclick="exportBruno()" title="Export as Bruno .bru file">⬇ .bru</button>
+      <button class="btn-send" id="send-btn" onclick="sendReq()"><span id="send-txt">Send</span><div class="spinner" id="send-spin" style="display:inline-block"></div></button>
+    </div>
+    <div class="req-tabs">
+      <div class="req-tab active" onclick="swApiTab('params')">Params</div>
+      <div class="req-tab" onclick="swApiTab('headers')">Headers</div>
+      <div class="req-tab" onclick="swApiTab('body')">Body</div>
+      <div class="req-tab" onclick="swApiTab('auth')">Auth</div>
+      <div class="req-tab" onclick="swApiTab('pre')">Pre-Request</div>
+      <div class="req-tab" onclick="swApiTab('sched')">⏱ Scheduler</div>
+    </div>
+    <div class="req-tab-content" style="flex:1;overflow:hidden">
+      <div class="tab-pane active" id="tp-params">
+        <div style="overflow:auto;flex:1">
+          <table class="kv-table"><thead><tr><th></th><th>Key</th><th>Value</th><th></th></tr></thead><tbody id="tb-params"></tbody></table>
+          <button class="add-row" onclick="addKV('tb-params')">+ Add Param</button>
+        </div>
+      </div>
+      <div class="tab-pane" id="tp-headers">
+        <div style="overflow:auto;flex:1">
+          <table class="kv-table"><thead><tr><th></th><th>Key</th><th>Value</th><th></th></tr></thead><tbody id="tb-headers"></tbody></table>
+          <button class="add-row" onclick="addKV('tb-headers')">+ Add Header</button>
+        </div>
+      </div>
+      <div class="tab-pane" id="tp-body">
+        <div class="body-types">
+          <span style="font-size:10px;color:var(--muted);margin-right:2px">Body:</span>
+          <button class="btype-btn active" onclick="setBodyT('none',this)">none</button>
+          <button class="btype-btn" onclick="setBodyT('json',this)">JSON</button>
+          <button class="btype-btn" onclick="setBodyT('xml',this)">XML</button>
+          <button class="btype-btn" onclick="setBodyT('text',this)">Text</button>
+          <button class="btype-btn" onclick="setBodyT('form',this)">Form URL-Encoded</button>
+          <button class="btype-btn" onclick="setBodyT('formdata',this)">Form Data</button>
+        </div>
+        <!-- Multi-payload manager -->
+        <div id="multi-payload-mgr" style="display:none;margin-bottom:6px;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--panel)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Saved Payloads</span>
+            <button class="btn btn-secondary btn-sm" onclick="addPayloadSlot()">+ Add Payload</button>
+          </div>
+          <div class="payload-list" id="payload-slot-list"></div>
+        </div>
+        <div id="body-none" style="color:var(--muted);font-size:13px;padding:10px">No body.</div>
+        <textarea class="body-ta" id="body-ed" style="display:none" spellcheck="false" placeholder="Request body…" oninput="capAPI()"></textarea>
+        <div id="body-form" style="display:none;overflow:auto">
+          <table class="kv-table"><thead><tr><th></th><th>Key</th><th>Value</th><th></th></tr></thead><tbody id="tb-form"></tbody></table>
+          <button class="add-row" onclick="addKV('tb-form')">+ Add Field</button>
+        </div>
+      </div>
+      <div class="tab-pane" id="tp-auth">
+        <select class="auth-sel" id="auth-type" onchange="renderAuth();capAPI()">
+          <option value="none">No Auth</option>
+          <option value="basic">Basic Auth</option>
+          <option value="bearer">Bearer Token</option>
+          <option value="oauth2">OAuth 2.0 (Client Credentials)</option>
+          <option value="apikey">API Key</option>
+        </select>
+        <div id="auth-fields"></div>
+      </div>
+      <div class="tab-pane" id="tp-pre">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:8px">JS executed before request. Use <code style="color:var(--accent2)">pm.env.set(k,v)</code> to set variables.</p>
+        <textarea class="body-ta" id="pre-script" style="flex:1" spellcheck="false" placeholder="// pm.env.set('token','abc')" oninput="capAPI()"></textarea>
+      </div>
+      <div class="tab-pane" id="tp-sched" style="padding:14px">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px">Schedule this request to fire repeatedly. Runs in a background thread — won't block other tabs.</p>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px">
+          <div>
+            <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Interval (seconds)</label>
+            <input class="sched-in" id="sched-interval" type="number" value="300" min="5" placeholder="300">
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Max Duration (seconds)</label>
+            <input class="sched-in" id="sched-maxtime" type="number" value="3600" min="10" placeholder="3600">
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-success btn-sm" onclick="startScheduler()">▶ Start</button>
+            <button class="btn btn-secondary btn-sm" onclick="stopScheduler()">■ Stop</button>
+            <span id="sched-status-badge"></span>
+          </div>
+        </div>
+        <div id="sched-log" class="sched-log"></div>
+      </div>
+    </div>
+
+    <div class="resp-resize-handle" id="resp-resize-handle" style="display:none" title="Drag to resize"></div>
+    <div class="resp-area" id="resp-area">
+      <div class="resp-hdr" id="resp-hdr"></div>
+      <div class="resp-tabs">
+        <div class="resp-tab active" onclick="swRespTab('body')">Body</div>
+        <div class="resp-tab" onclick="swRespTab('headers')">Headers</div>
+        <div class="resp-tab" onclick="swRespTab('multi')">Multi Results</div>
+      </div>
+      <div id="rt-body" class="resp-body-wrap"></div>
+      <div id="rt-headers" class="resp-hdrs-wrap" style="display:none"></div>
+      <div id="rt-multi" class="multi-wrap" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- cURL Modal -->
+<div class="modal-overlay" id="curl-overlay" style="display:none" onclick="if(event.target===this)closeCurlModal()">
+  <div class="curl-modal">
+    <h3 style="margin-bottom:4px">⌘ cURL Command</h3>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:2px">Includes auth headers. Ready to paste in CMD / Terminal.</p>
+    <pre class="curl-pre" id="curl-output"></pre>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-secondary btn-sm" onclick="copyCurl()">📋 Copy</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeCurlModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for Bruno import -->
+<input type="file" id="bruno-import-input" accept=".bru" style="display:none" onchange="onBrunoFileSelected(event)">
+
+<!-- ══ SOLACE ══ -->
+<div id="solace-panel" class="panel">
+  <div class="sol-scroll">
+    <div class="sol-body">
+      <div class="sol-title">☁ Solace Queue / Topic Tester</div>
+      <div class="fg-row">
+        <div class="fg"><label>Host (REST endpoint)</label><input id="sol-host" placeholder="http://broker-host:9000" oninput="saveSol()"></div>
+        <div class="fg"><label>Message VPN</label><input id="sol-vpn" placeholder="my-vpn" oninput="saveSol()"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Username</label><input id="sol-user" placeholder="solace-user" oninput="saveSol()"></div>
+        <div class="fg"><label>Password</label><input id="sol-pass" type="password" placeholder="••••••" oninput="saveSol()"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Destination Type</label>
+          <select id="sol-type" onchange="saveSol()"><option value="queue">Queue</option><option value="topic">Topic</option></select>
+        </div>
+        <div class="fg"><label>Queue / Topic Name</label><input id="sol-dest" placeholder="my.queue.name" oninput="saveSol()"></div>
+      </div>
+      <div class="fg"><label>Message Body</label><textarea id="sol-body" rows="5" placeholder='{"event":"test"}' oninput="saveSol()"></textarea></div>
+      <div class="fg"><label>Content Type</label>
+        <select id="sol-ct" onchange="saveSol()" style="max-width:280px">
+          <option value="application/json">application/json</option>
+          <option value="application/xml">application/xml</option>
+          <option value="text/plain">text/plain</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:9px;margin-top:4px;flex-wrap:wrap">
+        <button class="btn btn-accent2" onclick="solPublish()">▶ Publish</button>
+        <button class="btn btn-secondary" onclick="solTest()">🔌 Test Connection</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('sol-log').textContent=''">Clear Log</button>
+      </div>
+      <div class="sol-log" id="sol-log">Ready. Fill in connection details above.
+</div>
+      <div class="info-box">⚠ <b>Note:</b> This uses Solace REST Delivery Protocol (HTTP POST to REST port, default 9000/9443). Ensure REST Delivery is enabled on your broker. For raw AMQP/SMF, use SAP CPI or a native Solace client.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     GROOVY CPI SIMULATOR PANEL
+════════════════════════════════════════════ -->
+<!-- ══ JSON ↔ XML CONVERTER ══ -->
+<div id="converter-panel" class="panel">
+  <div class="cvt-toolbar">
+    <h2>🔄 JSON ↔ XML Converter</h2>
+    <div class="mode-pills">
+      <button class="pill active" id="cvt-j2x-pill" onclick="setCvtDir('json2xml',this)">JSON → XML</button>
+      <button class="pill" id="cvt-x2j-pill" onclick="setCvtDir('xml2json',this)">XML → JSON</button>
+    </div>
+    <span class="cvt-root-label" id="cvt-root-wrap">Root tag: <input id="cvt-root" value="root" placeholder="root"></span>
+    <button class="btn btn-accent2 btn-sm" onclick="doConvert()">Convert</button>
+    <button class="btn btn-secondary btn-sm" onclick="copyCvt()">Copy Output</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearCvt()">Clear</button>
+  </div>
+  <div class="cvt-body">
+    <div class="cvt-pane">
+      <div class="pane-hdr"><span id="cvt-in-label">JSON Input</span></div>
+      <div class="code-area"><textarea id="cvt-in" spellcheck="false" placeholder="Paste JSON here…"></textarea></div>
+    </div>
+    <div class="cvt-pane">
+      <div class="pane-hdr"><span id="cvt-out-label">XML Output</span><span id="cvt-status" style="font-size:10px;color:var(--success)"></span></div>
+      <div class="code-area"><textarea id="cvt-out" readonly spellcheck="false" style="resize:none;cursor:text;"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<div id="groovy-panel" class="panel">
+  <!-- Toolbar -->
+  <div class="gv-toolbar">
+    <h2>🟩 Groovy Script Simulator — SAP CPI</h2>
+    <span style="color:var(--muted);font-size:11px">Simulates com.sap.gateway.ip.core.customdev.util.Message API</span>
+    <div id="gv-status-badge" style="margin-left:auto;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;display:none"></div>
+  </div>
+  <div id="gv-install-banner" style="display:none;padding:10px 16px;background:rgba(248,81,73,.12);border-bottom:1px solid var(--danger);font-size:12px;color:var(--danger);font-family:var(--mono);white-space:pre-wrap"></div>
+
+  <!-- 3-column body -->
+  <div class="gv-body">
+
+    <!-- ── INPUT COLUMN ── -->
+    <div class="gv-col gv-col-input">
+      <div class="gv-col-hdr">Input <span>message</span></div>
+
+      <!-- Body -->
+      <div class="gv-sub" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+        <div class="gv-sub-hdr">Body (XML / JSON / Text)</div>
+        <div style="padding:8px 10px;flex:1;overflow:auto">
+          <textarea id="gv-in-body" class="gv-body-ta" style="height:100%;min-height:80px" placeholder="<root>Example Input Data</root>" oninput="gvSave()"></textarea>
+        </div>
+      </div>
+
+      <!-- Headers -->
+      <div class="gv-sub" style="flex-shrink:0">
+        <div class="gv-sub-hdr">Headers</div>
+        <div class="gv-sub-body" id="gv-in-headers-wrap">
+          <div id="gv-in-headers"></div>
+          <button class="gv-add-btn" onclick="gvAddKv('gv-in-headers','hdr')">+ add header</button>
+        </div>
+      </div>
+
+      <!-- Properties -->
+      <div class="gv-sub" style="flex-shrink:0">
+        <div class="gv-sub-hdr">Properties</div>
+        <div class="gv-sub-body">
+          <div id="gv-in-props"></div>
+          <button class="gv-add-btn" onclick="gvAddKv('gv-in-props','prop')">+ add property</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SCRIPT COLUMN ── -->
+    <div class="gv-col gv-col-script">
+      <!-- Script header -->
+      <div class="gv-script-hdr">
+        <span class="gv-script-title">Script</span>
+        <button class="gv-share-btn" onclick="gvCopyShare()">Copy Share URL</button>
+      </div>
+
+      <!-- Script textarea -->
+      <div class="gv-script-wrap">
+        <textarea id="gv-script" class="gv-script-ta" spellcheck="false" placeholder="// Groovy script&#10;import com.sap.gateway.ip.core.customdev.util.Message;&#10;&#10;def Message processData(Message message) {&#10;    def body = message.getBody(String);&#10;    message.setBody(body + ' processed');&#10;    return message;&#10;}" oninput="gvSave()" onkeydown="gvKeyDown(event)"></textarea>
+      </div>
+
+      <!-- Function bar + Execute -->
+      <div class="gv-fn-bar">
+        <span class="gv-fn-label">Script Function:</span>
+        <input id="gv-fn-name" class="gv-fn-input" value="processData" oninput="gvSave()">
+        <button id="gv-exec-btn" class="gv-exec-btn" onclick="gvExecute()">▶ Click to Execute Script (Alt+Enter)</button>
+      </div>
+
+      <!-- Console -->
+      <div class="gv-console-wrap">
+        <div class="gv-console-hdr">Console</div>
+        <div class="gv-console-body" id="gv-console">Console Output
+</div>
+      </div>
+    </div>
+
+    <!-- ── OUTPUT COLUMN ── -->
+    <div class="gv-col gv-col-output">
+      <div class="gv-col-hdr">Output <span>result</span></div>
+
+      <!-- Output Body -->
+      <div class="gv-sub" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+        <div class="gv-sub-hdr">Body</div>
+        <div style="padding:8px 10px;flex:1;overflow:auto">
+          <div id="gv-out-body" class="gv-out-body-text gv-out-empty">empty</div>
+        </div>
+      </div>
+
+      <!-- Output Headers -->
+      <div class="gv-sub" style="flex-shrink:0">
+        <div class="gv-sub-hdr">Headers</div>
+        <div class="gv-sub-body">
+          <div id="gv-out-headers" class="gv-out-empty">empty</div>
+        </div>
+      </div>
+
+      <!-- Output Properties -->
+      <div class="gv-sub" style="flex-shrink:0">
+        <div class="gv-sub-hdr">Properties</div>
+        <div class="gv-sub-body">
+          <div id="gv-out-props" class="gv-out-empty">empty</div>
+        </div>
+      </div>
+
+      <!-- Message Processing Logs -->
+      <div class="gv-sub" style="flex-shrink:0">
+        <div class="gv-sub-hdr" style="color:var(--accent2)">Message Processing Logs</div>
+        <div class="gv-sub-body">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px">Log Properties</div>
+          <div id="gv-out-log-props" class="gv-out-empty">empty</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:8px 0 4px">Custom Header Properties</div>
+          <div id="gv-out-custom-hdr" class="gv-out-empty">empty</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /gv-body -->
+</div><!-- /groovy-panel -->
+</div><!-- /main -->
+
+<!-- Context menu -->
+<div class="ctx" id="ctx" style="display:none"></div>
+<!-- Modal -->
+<div class="modal-overlay" id="modal-ov" style="display:none">
+  <div class="modal">
+    <h3 id="modal-t"></h3>
+    <input type="text" id="modal-in">
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const BASE = '';  // Flask base URL (same origin)
+let S = {
+  panel: 'notes',
+  notes: { nbs: [], curNB: null, curPG: null },
+  bfy: { mode: 'json', input: '', output: '' },
+  xsd: { input: '', ns: 'http://www.example.com/schema', useNs: true, req: true, unb: false, output: '' },
+  pay: { mode: 'JSON', left: '', right: '' },
+  api: {
+    method:'GET', url:'', ssl:true, cnt:1,
+    params:[], headers:[], bodyType:'none', body:'',
+    form:[], authType:'none', authData:{}, pre:'',
+    saved:[],
+    collections:[]  // [{id,name,open,requests:[{id,name,method,url,...,payloads:[{id,name,body}],activePayload}]}]
+  },
+  sol: { host:'', vpn:'', user:'', pass:'', type:'queue', dest:'', body:'', ct:'application/json' }
+};
+
+let _saveSTimer=null;
+async function loadS() {
+  try {
+    const r=await fetch('/api/storage/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'nc2_state'})});
+    const d=await r.json();
+    if(d.success&&d.value) S=d.value;
+  } catch(e){ try{const raw=localStorage.getItem('nc2_state');if(raw)S=JSON.parse(raw);}catch(e2){} }
+  // Ensure defaults
+  if (!S.notes) S.notes = {nbs:[], curNB:null, curPG:null};
+  if (!S.api) S.api = {method:'GET',url:'',ssl:true,cnt:1,params:[],headers:[],bodyType:'none',body:'',form:[],authType:'none',authData:{},pre:'',saved:[],collections:[]};
+  if (!S.api.saved) S.api.saved = [];
+  if (!S.api.collections) S.api.collections = [];
+  if (!S.sol) S.sol = {host:'',vpn:'',user:'',pass:'',type:'queue',dest:'',body:'',ct:'application/json'};
+  if (!S.bfy) S.bfy = {mode:'json',input:'',output:''};
+  if (!S.xsd) S.xsd = {input:'',ns:'http://www.example.com/schema',useNs:true,req:true,unb:false,output:''};
+  if (!S.pay) S.pay = {mode:'JSON',left:'',right:''};
+}
+function saveS() {
+  clearTimeout(_saveSTimer);
+  _saveSTimer=setTimeout(()=>{
+    fetch('/api/storage/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'nc2_state',value:S})}).catch(()=>{});
+    try{localStorage.setItem('nc2_state',JSON.stringify(S));}catch(e){}
+  },300);
+}
+
+// ─────────────────────────────────────────────
+// PANEL SWITCH
+// ─────────────────────────────────────────────
+function sw(name) {
+  if (S.panel === 'api') capAPI();
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(name+'-panel').classList.add('active');
+  const idx = ['notes','beautify','xsd','payload','api','solace','groovy','converter'].indexOf(name);
+  document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+  S.panel = name; saveS();
+  if (name==='notes') renderNBs();
+  if (name==='beautify') restoreBfy();
+  if (name==='xsd') restoreXsd();
+  if (name==='payload') restorePay();
+  if (name==='api') restoreAPI();
+  if (name==='solace') restoreSol();
+}
+
+// ─────────────────────────────────────────────
+// NOTES
+// ─────────────────────────────────────────────
+function renderNBs() {
+  const el = document.getElementById('nb-list'); el.innerHTML = '';
+  S.notes.nbs.forEach((nb, i) => {
+    const d = document.createElement('div');
+    d.className = 'nb-item' + (S.notes.curNB===i?' active':'');
+    d.innerHTML = `<span>📓</span><span class="item-name">${esc(nb.name)}</span>
+      <button class="item-menu" onclick="event.stopPropagation();nbCtx(event,${i})">⋯</button>`;
+    d.onclick = () => selNB(i);
+    el.appendChild(d);
+  });
+  renderPGs();
+}
+function selNB(i) {
+  S.notes.curNB = i; S.notes.curPG = null;
+  document.getElementById('pg-hdr').textContent = S.notes.nbs[i]?.name||'Pages';
+  document.getElementById('note-title').value = '';
+  document.getElementById('note-body').value = '';
+  saveS(); renderNBs();
+}
+function addNotebook() {
+  showModal('New Notebook', 'Notebook name…', name => {
+    if (!name.trim()) return;
+    S.notes.nbs.push({name:name.trim(),pages:[]});
+    S.notes.curNB = S.notes.nbs.length-1; S.notes.curPG = null;
+    saveS(); renderNBs();
+  });
+}
+function nbCtx(e, i) {
+  e.stopPropagation();
+  showCtx(e.clientX, e.clientY, [
+    {label:'✏ Rename', action:()=>showModal('Rename Notebook','New name…',n=>{if(n.trim()){S.notes.nbs[i].name=n.trim();saveS();renderNBs();}},S.notes.nbs[i].name)},
+    {label:'📁 Export as .txt', action:()=>exportNotebook(i)},
+    {label:'🗑 Delete', cls:'danger', action:()=>{if(confirm('Delete notebook?')){S.notes.nbs.splice(i,1);S.notes.curNB=null;S.notes.curPG=null;saveS();renderNBs();}}}
+  ]);
+}
+function renderPGs() {
+  const el = document.getElementById('pg-list'); el.innerHTML = '';
+  const nb = S.notes.nbs[S.notes.curNB]; if (!nb) return;
+  nb.pages.forEach((pg,i) => {
+    const d = document.createElement('div');
+    d.className = 'pg-item'+(S.notes.curPG===i?' active':'');
+    d.innerHTML = `<span style="font-size:11px">📄</span><span class="item-name">${esc(pg.title||'Untitled')}</span>
+      <button class="item-menu" onclick="event.stopPropagation();pgCtx(event,${i})">⋯</button>`;
+    d.onclick = ()=>selPG(i);
+    el.appendChild(d);
+  });
+}
+function selPG(i) {
+  S.notes.curPG = i;
+  const pg = S.notes.nbs[S.notes.curNB]?.pages[i];
+  if (pg) { document.getElementById('note-title').value=pg.title||''; document.getElementById('note-body').value=pg.content||''; }
+  saveS(); renderPGs();
+}
+function addPage() {
+  if (S.notes.curNB===null){alert('Select a notebook first.');return;}
+  S.notes.nbs[S.notes.curNB].pages.push({title:'Untitled Page',content:''});
+  S.notes.curPG = S.notes.nbs[S.notes.curNB].pages.length-1;
+  saveS(); renderNBs(); selPG(S.notes.curPG);
+}
+function pgCtx(e, i) {
+  e.stopPropagation();
+  showCtx(e.clientX, e.clientY, [
+    {label:'✏ Rename', action:()=>showModal('Rename Page','New name…',n=>{if(n.trim()){S.notes.nbs[S.notes.curNB].pages[i].title=n.trim();saveS();renderPGs();if(S.notes.curPG===i)document.getElementById('note-title').value=n.trim();}},S.notes.nbs[S.notes.curNB].pages[i].title)},
+    {label:'💾 Save as .txt', action:()=>savePageTxt(i)},
+    {label:'🗑 Delete', cls:'danger', action:()=>{
+      if(confirm('Delete page?')){
+        const nb=S.notes.nbs[S.notes.curNB];
+        nb.pages.splice(i,1);
+        if(S.notes.curPG>=nb.pages.length)S.notes.curPG=nb.pages.length-1;
+        saveS();renderNBs();
+        if(nb.pages.length>0&&S.notes.curPG>=0)selPG(S.notes.curPG);
+        else{document.getElementById('note-title').value='';document.getElementById('note-body').value='';}
+      }
+    }}
+  ]);
+}
+function saveNote() {
+  if(S.notes.curNB===null||S.notes.curPG===null)return;
+  const pg=S.notes.nbs[S.notes.curNB]?.pages[S.notes.curPG]; if(!pg)return;
+  pg.title=document.getElementById('note-title').value;
+  pg.content=document.getElementById('note-body').value;
+  saveS(); renderPGs();
+}
+function savePageTxt(idx) {
+  const nbI=S.notes.curNB; if(nbI===null){alert('No notebook selected.');return;}
+  const i=idx!==undefined?idx:S.notes.curPG;
+  if(i===null||i<0){alert('No page selected.');return;}
+  const pg=S.notes.nbs[nbI].pages[i];
+  dlFile((pg.title||'page')+'.txt', (pg.title?pg.title+'\n'+'='.repeat(pg.title.length)+'\n\n':'')+(pg.content||''), 'text/plain');
+}
+function exportNotebook(nbI) {
+  const i=nbI!==undefined?nbI:S.notes.curNB; if(i===null){alert('No notebook selected.');return;}
+  const nb=S.notes.nbs[i]; if(!nb.pages.length){alert('No pages to export.');return;}
+  const combined=nb.pages.map(pg=>`== ${pg.title||'Untitled'} ==\n\n${pg.content||''}\n`).join('\n--- PAGE BREAK ---\n\n');
+  dlFile(nb.name+'_notebook.txt', combined, 'text/plain');
+}
+
+// ─────────────────────────────────────────────
+// BEAUTIFIER
+// ─────────────────────────────────────────────
+let bfyMode = 'json';
+function setBfyMode(m,btn) {
+  bfyMode=m; S.bfy.mode=m; saveS();
+  document.querySelectorAll('.bfy-toolbar .pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+}
+function restoreBfy() {
+  bfyMode = S.bfy.mode||'json';
+  document.getElementById('bfy-in').value = S.bfy.input||'';
+  document.getElementById('bfy-out').textContent = S.bfy.output||'';
+  document.querySelectorAll('.bfy-toolbar .pill').forEach(p=>{
+    p.classList.toggle('active', p.textContent.toLowerCase()===bfyMode);
+  });
+}
+function saveBfyState(){ S.bfy.input=document.getElementById('bfy-in').value; saveS(); }
+async function beautify() {
+  const content = document.getElementById('bfy-in').value.trim();
+  if (!content){alert('Paste content first.');return;}
+  try {
+    const r = await post('/api/beautify', {content, mode:bfyMode});
+    if (r.success) {
+      document.getElementById('bfy-out').textContent = r.result;
+      document.getElementById('bfy-status').textContent = '✓ Done';
+      S.bfy.output = r.result; saveS();
+    } else {
+      document.getElementById('bfy-out').textContent = '// Error: '+r.error;
+      document.getElementById('bfy-status').textContent = '';
+    }
+  } catch(e){ document.getElementById('bfy-out').textContent='// Error: '+e.message; }
+}
+async function minify() {
+  const content = document.getElementById('bfy-in').value.trim();
+  if (!content){alert('Paste content first.');return;}
+  try {
+    if (bfyMode==='json') {
+      const obj=JSON.parse(content);
+      document.getElementById('bfy-out').textContent=JSON.stringify(obj);
+    } else {
+      const r=await post('/api/beautify',{content,mode:'xml'});
+      if(r.success) document.getElementById('bfy-out').textContent=r.result.replace(/\n\s*/g,'');
+    }
+  } catch(e){ document.getElementById('bfy-out').textContent='// Error: '+e.message; }
+}
+function copyBfy(){
+  const t=document.getElementById('bfy-out').textContent;
+  if(!t.trim()){alert('Nothing to copy.');return;}
+  navigator.clipboard.writeText(t).then(()=>{document.getElementById('bfy-status').textContent='Copied!';setTimeout(()=>document.getElementById('bfy-status').textContent='',1500);});
+}
+function clearBfy(){
+  document.getElementById('bfy-in').value='';
+  document.getElementById('bfy-out').textContent='';
+  document.getElementById('bfy-status').textContent='';
+  S.bfy.input='';S.bfy.output='';saveS();
+}
+
+// ─────────────────────────────────────────────
+// XSD GENERATOR
+// ─────────────────────────────────────────────
+function toggleNS() {
+  const on = document.getElementById('xsd-use-ns').checked;
+  document.getElementById('ns-field-label').style.opacity = on?'1':'0.35';
+  document.getElementById('xsd-ns').disabled = !on;
+  S.xsd.useNs=on; saveS();
+}
+function restoreXsd() {
+  document.getElementById('xsd-in').value = S.xsd.input||'';
+  document.getElementById('xsd-ns').value = S.xsd.ns||'http://www.example.com/schema';
+  document.getElementById('xsd-use-ns').checked = S.xsd.useNs!==false;
+  document.getElementById('xsd-req').checked = S.xsd.req!==false;
+  document.getElementById('xsd-unb').checked = !!S.xsd.unb;
+  document.getElementById('xsd-out').textContent = S.xsd.output||'';
+  toggleNS();
+}
+function saveXsdState(){ S.xsd.input=document.getElementById('xsd-in').value; saveS(); }
+async function genXSD() {
+  const content = document.getElementById('xsd-in').value.trim();
+  if(!content){alert('Paste XML or JSON first.');return;}
+  const errEl = document.getElementById('xsd-err');
+  errEl.textContent='';
+  const payload = {
+    content,
+    namespace: document.getElementById('xsd-ns').value.trim(),
+    allRequired: document.getElementById('xsd-req').checked,
+    unbounded: document.getElementById('xsd-unb').checked,
+    useNamespace: document.getElementById('xsd-use-ns').checked
+  };
+  try {
+    const r = await post('/api/generate-xsd', payload);
+    if (r.success) {
+      document.getElementById('xsd-out').textContent = r.xsd;
+      S.xsd.output=r.xsd; S.xsd.ns=payload.namespace; S.xsd.req=payload.allRequired;
+      S.xsd.unb=payload.unbounded; S.xsd.useNs=payload.useNamespace;
+      saveS();
+    } else {
+      errEl.textContent = 'Error: '+r.error;
+    }
+  } catch(e){ errEl.textContent='Error: '+e.message; }
+}
+function copyXSD(){
+  const t=document.getElementById('xsd-out').textContent; if(!t.trim()){alert('Generate XSD first.');return;}
+  navigator.clipboard.writeText(t).then(()=>alert('XSD copied!'));
+}
+function dlXSD(){
+  const t=document.getElementById('xsd-out').textContent; if(!t.trim()){alert('Generate XSD first.');return;}
+  const ns=document.getElementById('xsd-ns').value||'schema';
+  dlFile(ns.split('/').pop()+'.xsd', t, 'application/xml');
+}
+
+// ─────────────────────────────────────────────
+// PAYLOAD COMPARATOR
+// ─────────────────────────────────────────────
+let payMode='JSON';
+let lastFlatL={}, lastFlatR={};
+
+function restorePay() {
+  payMode = S.pay.mode||'JSON';
+  document.getElementById('pay-left').value = S.pay.left||'';
+  document.getElementById('pay-right').value = S.pay.right||'';
+  setPayModeUI(payMode);
+}
+function savePayState(){ S.pay.left=document.getElementById('pay-left').value; S.pay.right=document.getElementById('pay-right').value; saveS(); }
+function setPayMode(m,btn) {
+  payMode=m; S.pay.mode=m; saveS();
+  setPayModeUI(m);
+  clearPayHighlights();
+  document.getElementById('diff-out').innerHTML='<p style="color:var(--muted);font-size:12px;padding:6px">Click Compare to see differences.</p>';
+  document.getElementById('pay-stats').innerHTML='';
+}
+function setPayModeUI(m){
+  document.getElementById('pay-json-pill').classList.toggle('active',m==='JSON');
+  document.getElementById('pay-xml-pill').classList.toggle('active',m==='XML');
+}
+function clearPay(){
+  document.getElementById('pay-left').value='';
+  document.getElementById('pay-right').value='';
+  clearPayHighlights();
+  document.getElementById('diff-out').innerHTML='<p style="color:var(--muted);font-size:12px;padding:6px">Click Compare to see differences.</p>';
+  document.getElementById('pay-stats').innerHTML='';
+  S.pay.left='';S.pay.right='';saveS();
+}
+
+async function doCmp() {
+  const left=document.getElementById('pay-left').value.trim();
+  const right=document.getElementById('pay-right').value.trim();
+  if(!left||!right){alert('Both payloads required.');return;}
+  try {
+    const r=await post('/api/compare',{mode:payMode.toLowerCase(),left,right});
+    if(!r.success){alert('Compare error: '+r.error);return;}
+    lastFlatL=r.flatLeft||{}; lastFlatR=r.flatRight||{};
+    renderDiff(r.missingInRight, r.missingInLeft, r.mismatches);
+    renderHighlights(r.missingInRight, r.missingInLeft, r.mismatches, left, right);
+  } catch(e){ alert('Error: '+e.message); }
+}
+
+function renderDiff(mir, mil, mm) {
+  const total_r=mir.length, total_l=mil.length, total_m=mm.length;
+  document.getElementById('pay-stats').innerHTML=
+    `<span class="stat-r">${total_r} missing in right</span>
+     <span class="stat-l">${total_l} missing in left</span>
+     <span class="stat-m">${total_m} value mismatches</span>`;
+
+  if(!total_r&&!total_l&&!total_m){
+    document.getElementById('diff-out').innerHTML='<p style="color:var(--success);font-size:13px;padding:10px">✓ Payloads are identical.</p>';
+    return;
+  }
+  let html='';
+  if(total_r){
+    html+=`<div class="diff-section"><div class="diff-sec-title">MISSING IN RIGHT (${total_r})</div>`;
+    mir.forEach(k=>html+=`<div class="diff-item di-missing"><span class="diff-icon">✕</span>${esc(k)}</div>`);
+    html+='</div>';
+  }
+  if(total_l){
+    html+=`<div class="diff-section"><div class="diff-sec-title">MISSING IN LEFT (${total_l})</div>`;
+    mil.forEach(k=>html+=`<div class="diff-item di-missing"><span class="diff-icon">✕</span>${esc(k)}</div>`);
+    html+='</div>';
+  }
+  if(total_m){
+    html+=`<div class="diff-section"><div class="diff-sec-title">VALUE MISMATCH (${total_m})</div>`;
+    mm.forEach(m=>html+=`<div class="diff-item di-mismatch" title="Left: ${esc(m.left)}\nRight: ${esc(m.right)}"><span class="diff-icon">⚠</span>${esc(m.key)}</div>`);
+    html+='</div>';
+  }
+  document.getElementById('diff-out').innerHTML=html;
+}
+
+// ── LINE HIGHLIGHTING ──
+function renderHighlights(mir, mil, mm, leftTxt, rightTxt) {
+  // Build sets of keys that are problematic
+  const missingRightKeys = new Set(mir);
+  const missingLeftKeys = new Set(mil);
+  const mismatchKeys = new Set(mm.map(m=>m.key));
+
+  highlightPane('pay-left', 'pay-left-lines', leftTxt, missingRightKeys, mismatchKeys, 'left');
+  highlightPane('pay-right', 'pay-right-lines', rightTxt, missingLeftKeys, mismatchKeys, 'right');
+}
+
+function highlightPane(textareaId, linesId, text, missingKeys, mismatchKeys, side) {
+  const textarea = document.getElementById(textareaId);
+  const linesEl = document.getElementById(linesId);
+  const lines = text.split('\n');
+
+  // Build a lookup: for each line, what is the highlight type?
+  // We match by extracting the key/tag from each line
+  const lineHighlights = lines.map(line => {
+    const key = extractKeyFromLine(line, side==='left'?lastFlatL:lastFlatR);
+    if (!key) return 'none';
+    // Check if any missing key or mismatch key matches this line's content
+    for (const mk of missingKeys) {
+      if (lineMatchesKey(line, mk)) return 'missing';
+    }
+    for (const mk of mismatchKeys) {
+      if (lineMatchesKey(line, mk)) return 'mismatch';
+    }
+    return 'none';
+  });
+
+  const hasHighlights = lineHighlights.some(h=>h!=='none');
+
+  if (!hasHighlights) {
+    // No highlights needed, show textarea
+    textarea.style.display='block';
+    linesEl.style.display='none';
+    return;
+  }
+
+  // Build highlighted lines view
+  textarea.style.display='none';
+  linesEl.style.display='block';
+  linesEl.innerHTML='';
+  lines.forEach((line, i) => {
+    const div=document.createElement('div');
+    const hl=lineHighlights[i];
+    div.className='pay-line hl-'+(hl==='missing'?'missing':hl==='mismatch'?'mismatch':'none');
+    div.textContent=line||' ';
+    linesEl.appendChild(div);
+  });
+}
+
+function lineMatchesKey(line, key) {
+  const trimmed = line.trim();
+  // Extract the last segment of the key (leaf name)
+  const parts = key.replace(/\[.*?\]/g,'').split('.');
+  const leaf = parts[parts.length-1];
+  if (!leaf) return false;
+  // Match XML tag or JSON key
+  const xmlTagRe = new RegExp(`</?${leaf}[\\s>]|</?${leaf}$`,'i');
+  const jsonKeyRe = new RegExp(`"${leaf}"\\s*:`,'i');
+  return xmlTagRe.test(trimmed) || jsonKeyRe.test(trimmed);
+}
+
+function extractKeyFromLine(line) { return null; } // not needed
+
+function clearPayHighlights() {
+  ['pay-left','pay-right'].forEach(id=>{
+    document.getElementById(id).style.display='block';
+  });
+  document.getElementById('pay-left-lines').style.display='none';
+  document.getElementById('pay-right-lines').style.display='none';
+  lastFlatL={}; lastFlatR={};
+}
+
+// ─────────────────────────────────────────────
+// API TESTER
+// ─────────────────────────────────────────────
+let apiEnv={};
+let curBodyType='none';
+let curColIdx=null;   // current collection index
+let curReqIdx=null;   // current request index within collection
+let curSchedId=null;  // active scheduler id
+let schedPollTimer=null;
+let activePayloadIdx=null; // index into current request's payloads array
+
+// ── tab switching (extended for sched) ──
+function swApiTab(name) {
+  const tabs=['params','headers','body','auth','pre','sched'];
+  document.querySelectorAll('.req-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tp-'+name).classList.add('active');
+}
+
+function capAPI() {
+  S.api.method=document.getElementById('api-meth').value;
+  S.api.url=document.getElementById('api-url').value;
+  S.api.ssl=document.getElementById('api-ssl').checked;
+  S.api.cnt=parseInt(document.getElementById('api-cnt').value)||1;
+  S.api.bodyType=curBodyType;
+  S.api.body=document.getElementById('body-ed').value;
+  S.api.pre=document.getElementById('pre-script').value;
+  S.api.params=getKVs('tb-params');
+  S.api.headers=getKVs('tb-headers');
+  S.api.form=getKVs('tb-form');
+  S.api.authType=document.getElementById('auth-type').value;
+  S.api.authData=getAuthD();
+  // sync body to active payload slot
+  if(curColIdx!==null&&curReqIdx!==null&&activePayloadIdx!==null){
+    const req=S.api.collections[curColIdx]?.requests[curReqIdx];
+    if(req&&req.payloads&&req.payloads[activePayloadIdx]){
+      req.payloads[activePayloadIdx].body=S.api.body;
+    }
+  }
+  saveS();
+}
+
+function restoreAPI() {
+  document.getElementById('api-meth').value=S.api.method||'GET';
+  document.getElementById('api-url').value=S.api.url||'';
+  document.getElementById('api-ssl').checked=S.api.ssl!==false;
+  document.getElementById('api-cnt').value=S.api.cnt||1;
+  document.getElementById('body-ed').value=S.api.body||'';
+  document.getElementById('pre-script').value=S.api.pre||'';
+  document.getElementById('auth-type').value=S.api.authType||'none';
+  renderAuth(); restoreAuthD(S.api.authData||{});
+  setBodyT(S.api.bodyType||'none',null,true);
+  fillKVs('tb-params',S.api.params||[]);
+  fillKVs('tb-headers',S.api.headers||[]);
+  fillKVs('tb-form',S.api.form||[]);
+  renderSaved();
+}
+
+// ── COLLECTIONS & SAVED ──
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function addCollection(){
+  showModal('New Collection','Collection name…',name=>{
+    if(!name.trim())return;
+    S.api.collections.push({id:genId(),name:name.trim(),open:true,requests:[]});
+    saveS(); renderSaved();
+  });
+}
+
+function renderSaved(){
+  const el=document.getElementById('saved-list'); el.innerHTML='';
+
+  // Collections with nested requests
+  (S.api.collections||[]).forEach((col,ci)=>{
+    const colDiv=document.createElement('div');
+    colDiv.className='col-item';
+
+    const hdr=document.createElement('div');
+    hdr.className='col-header'+(curColIdx===ci&&curReqIdx===null?' active-col':'');
+    hdr.innerHTML=`<span class="col-arrow ${col.open?'open':''}">▶</span>
+      <span style="font-size:13px">📁</span>
+      <span class="col-name">${esc(col.name)}</span>
+      <span style="font-size:9px;color:var(--muted);margin-right:4px">${col.requests.length}</span>
+      <button class="col-menu-btn" onclick="event.stopPropagation();colCtx(event,${ci})">⋯</button>`;
+    hdr.onclick=()=>{ col.open=!col.open; saveS(); renderSaved(); };
+    colDiv.appendChild(hdr);
+
+    const children=document.createElement('div');
+    children.className='col-children'+(col.open?' open':'');
+    (col.requests||[]).forEach((req,ri)=>{
+      const rDiv=document.createElement('div');
+      rDiv.className='col-req-item'+(curColIdx===ci&&curReqIdx===ri?' active':'');
+      rDiv.innerHTML=`<span class="col-req-badge m${req.method||'GET'}">${req.method||'GET'}</span>
+        <span class="col-req-name">${esc(req.name)}</span>
+        <button class="col-req-menu" onclick="event.stopPropagation();reqCtx(event,${ci},${ri})">⋯</button>`;
+      rDiv.onclick=()=>loadColReq(ci,ri);
+      children.appendChild(rDiv);
+    });
+    // + add request button inside collection
+    const addBtn=document.createElement('button');
+    addBtn.className='add-row';
+    addBtn.style.cssText='margin:3px 0 5px 0;width:100%;font-size:10px';
+    addBtn.textContent='+ Add Request';
+    addBtn.onclick=(e)=>{e.stopPropagation();newReqInCol(ci);};
+    children.appendChild(addBtn);
+    colDiv.appendChild(children);
+    el.appendChild(colDiv);
+  });
+
+  // Uncollected (legacy) saved requests
+  if(S.api.saved&&S.api.saved.length){
+    const sep=document.createElement('div');
+    sep.style.cssText='font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:8px 6px 3px';
+    sep.textContent='Uncollected';
+    el.appendChild(sep);
+    S.api.saved.forEach((req,i)=>{
+      const d=document.createElement('div'); d.className='saved-req-item';
+      d.innerHTML=`<div class="req-badge m${req.method}">${req.method}</div><div class="req-name">${esc(req.name)}</div>`;
+      d.onclick=()=>loadReq(i);
+      d.oncontextmenu=(e)=>{e.preventDefault();showCtx(e.clientX,e.clientY,[
+        {label:'📋 Load',action:()=>loadReq(i)},
+        {label:'📁 Move to Collection…',action:()=>moveToCollection(i)},
+        {label:'🗑 Delete',cls:'danger',action:()=>{S.api.saved.splice(i,1);saveS();renderSaved();}}
+      ]);};
+      el.appendChild(d);
+    });
+  }
+}
+
+function colCtx(e,ci){
+  e.stopPropagation();
+  showCtx(e.clientX,e.clientY,[
+    {label:'✏ Rename',action:()=>showModal('Rename Collection','New name…',n=>{if(n.trim()){S.api.collections[ci].name=n.trim();saveS();renderSaved();}},S.api.collections[ci].name)},
+    {label:'＋ Add Request',action:()=>newReqInCol(ci)},
+    {label:'🗑 Delete Collection',cls:'danger',action:()=>{if(confirm('Delete collection and all its requests?')){S.api.collections.splice(ci,1);if(curColIdx===ci){curColIdx=null;curReqIdx=null;}saveS();renderSaved();}}}
+  ]);
+}
+
+function reqCtx(e,ci,ri){
+  e.stopPropagation();
+  showCtx(e.clientX,e.clientY,[
+    {label:'📋 Load',action:()=>loadColReq(ci,ri)},
+    {label:'✏ Rename',action:()=>{const req=S.api.collections[ci].requests[ri];showModal('Rename Request','New name…',n=>{if(n.trim()){req.name=n.trim();saveS();renderSaved();}},req.name);}},
+    {label:'⬇ Export .bru',action:()=>exportBrunoFor(ci,ri)},
+    {label:'🗑 Delete',cls:'danger',action:()=>{S.api.collections[ci].requests.splice(ri,1);if(curColIdx===ci&&curReqIdx===ri){curColIdx=null;curReqIdx=null;}saveS();renderSaved();}}
+  ]);
+}
+
+function newReqInCol(ci){
+  const col=S.api.collections[ci];
+  const id=genId();
+  col.requests.push({id,name:'New Request',method:'GET',url:'',params:[],headers:[],bodyType:'none',body:'',form:[],authType:'none',authData:{},pre:'',payloads:[],activePayload:null});
+  col.open=true;
+  saveS();
+  renderSaved();
+  loadColReq(ci,col.requests.length-1);
+}
+
+function newReq(){
+  curColIdx=null; curReqIdx=null; activePayloadIdx=null;
+  Object.assign(S.api,{method:'GET',url:'',params:[],headers:[],bodyType:'none',body:'',form:[],authType:'none',authData:{},pre:''});
+  restoreAPI();
+  renderPayloadSlots(null);
+  document.getElementById('resp-area').style.display='none';
+}
+
+function loadColReq(ci,ri){
+  capAPI(); // save current state back first
+  curColIdx=ci; curReqIdx=ri;
+  const req=S.api.collections[ci].requests[ri];
+  Object.assign(S.api,{method:req.method||'GET',url:req.url||'',params:req.params||[],headers:req.headers||[],
+    bodyType:req.bodyType||'none',body:req.body||'',form:req.form||[],
+    authType:req.authType||'none',authData:req.authData||{},pre:req.pre||''});
+  restoreAPIFields();
+  // Set active payload
+  activePayloadIdx=req.activePayload??null;
+  if(activePayloadIdx!==null&&req.payloads&&req.payloads[activePayloadIdx]){
+    S.api.body=req.payloads[activePayloadIdx].body||'';
+    document.getElementById('body-ed').value=S.api.body;
+  }
+  renderPayloadSlots(req);
+  renderSaved();
+}
+
+function restoreAPIFields(){
+  document.getElementById('api-meth').value=S.api.method||'GET';
+  document.getElementById('api-url').value=S.api.url||'';
+  document.getElementById('api-ssl').checked=S.api.ssl!==false;
+  document.getElementById('api-cnt').value=S.api.cnt||1;
+  document.getElementById('body-ed').value=S.api.body||'';
+  document.getElementById('pre-script').value=S.api.pre||'';
+  document.getElementById('auth-type').value=S.api.authType||'none';
+  renderAuth(); restoreAuthD(S.api.authData||{});
+  setBodyT(S.api.bodyType||'none',null,true);
+  fillKVs('tb-params',S.api.params||[]);
+  fillKVs('tb-headers',S.api.headers||[]);
+  fillKVs('tb-form',S.api.form||[]);
+}
+
+function saveReqToCollection(){
+  capAPI();
+  if(curColIdx!==null&&curReqIdx!==null){
+    // Save into existing collection request
+    const req=S.api.collections[curColIdx].requests[curReqIdx];
+    Object.assign(req,{method:S.api.method,url:S.api.url,params:S.api.params,headers:S.api.headers,
+      bodyType:S.api.bodyType,body:S.api.body,form:S.api.form,authType:S.api.authType,authData:S.api.authData,pre:S.api.pre});
+    saveS(); renderSaved();
+    return;
+  }
+  // Ask where to save
+  const colNames=S.api.collections.map(c=>c.name);
+  if(!colNames.length){
+    // No collections, fall back to legacy save
+    saveReq(); return;
+  }
+  const chosen=prompt('Save to collection (name) or leave blank for Uncollected:\n'+colNames.map((n,i)=>`${i+1}. ${n}`).join('\n'));
+  if(chosen===null)return;
+  const matchIdx=S.api.collections.findIndex(c=>c.name.toLowerCase()===chosen.trim().toLowerCase())||
+    (parseInt(chosen)-1);
+  if(colNames.length&&chosen.trim()&&(matchIdx>=0||parseInt(chosen)-1>=0)){
+    const ci=S.api.collections.findIndex(c=>c.name.toLowerCase()===chosen.trim().toLowerCase());
+    const finalCi=ci>=0?ci:(parseInt(chosen)-1>=0&&parseInt(chosen)-1<S.api.collections.length?parseInt(chosen)-1:-1);
+    if(finalCi>=0){
+      const name2=prompt('Request name:',S.api.url||'My Request'); if(!name2)return;
+      S.api.collections[finalCi].requests.push({id:genId(),name:name2,method:S.api.method,url:S.api.url,
+        params:S.api.params,headers:S.api.headers,bodyType:S.api.bodyType,body:S.api.body,
+        form:S.api.form,authType:S.api.authType,authData:S.api.authData,pre:S.api.pre,payloads:[],activePayload:null});
+      S.api.collections[finalCi].open=true;
+      saveS(); renderSaved(); return;
+    }
+  }
+  saveReq();
+}
+
+function moveToCollection(savedIdx){
+  const colNames=S.api.collections.map(c=>c.name);
+  if(!colNames.length){alert('Create a collection first.');return;}
+  const chosen=prompt('Move to collection:\n'+colNames.map((n,i)=>`${i+1}. ${n}`).join('\n'));
+  if(!chosen)return;
+  const ci=S.api.collections.findIndex(c=>c.name.toLowerCase()===chosen.trim().toLowerCase())||parseInt(chosen)-1;
+  const finalCi=ci>=0?ci:parseInt(chosen)-1;
+  if(finalCi<0||finalCi>=S.api.collections.length){alert('Invalid collection.');return;}
+  const req=S.api.saved[savedIdx];
+  S.api.collections[finalCi].requests.push({...req,payloads:[],activePayload:null});
+  S.api.saved.splice(savedIdx,1);
+  saveS(); renderSaved();
+}
+
+// Legacy save (uncollected)
+function saveReq(){
+  capAPI();
+  const name=prompt('Request name:',S.api.url||'My Request'); if(!name)return;
+  S.api.saved.push({id:Date.now().toString(),name,method:S.api.method,url:S.api.url,
+    params:S.api.params,headers:S.api.headers,bodyType:S.api.bodyType,body:S.api.body,
+    form:S.api.form,authType:S.api.authType,authData:S.api.authData,pre:S.api.pre});
+  saveS(); renderSaved();
+}
+
+function loadReq(i){
+  const r=S.api.saved[i]; if(!r)return;
+  curColIdx=null; curReqIdx=null; activePayloadIdx=null;
+  Object.assign(S.api,{method:r.method,url:r.url,params:r.params||[],headers:r.headers||[],
+    bodyType:r.bodyType||'none',body:r.body||'',form:r.form||[],
+    authType:r.authType||'none',authData:r.authData||{},pre:r.pre||''});
+  restoreAPI();
+  renderPayloadSlots(null);
+}
+
+// ── MULTI-PAYLOAD ──
+function renderPayloadSlots(req){
+  const mgr=document.getElementById('multi-payload-mgr');
+  const list=document.getElementById('payload-slot-list');
+  list.innerHTML='';
+  if(!req){mgr.style.display='none';return;}
+  const payloads=req.payloads||[];
+  if(payloads.length===0&&(req.bodyType==='none'||!req.bodyType)){mgr.style.display='none';return;}
+  mgr.style.display='block';
+  payloads.forEach((pl,idx)=>{
+    const d=document.createElement('div');
+    d.className='payload-item'+(activePayloadIdx===idx?' active-pl':'');
+    d.innerHTML=`<span style="font-size:11px">📄</span>
+      <span class="payload-item-name">${esc(pl.name||'Payload '+(idx+1))}</span>
+      <button class="btn btn-secondary btn-sm" style="padding:2px 7px;font-size:9px" onclick="activatePayload(${idx})">Use</button>
+      <button class="payload-item-del" onclick="deletePayloadSlot(${idx})" title="Delete payload">✕</button>`;
+    d.onclick=(e)=>{if(e.target.tagName==='BUTTON')return;activatePayload(idx);};
+    list.appendChild(d);
+  });
+}
+
+function addPayloadSlot(){
+  if(curColIdx===null||curReqIdx===null){alert('Load a collection request first to manage payloads.');return;}
+  const req=S.api.collections[curColIdx].requests[curReqIdx];
+  if(!req.payloads)req.payloads=[];
+  const name=prompt('Payload name:','Payload '+(req.payloads.length+1));
+  if(!name)return;
+  // capture current body as this new payload
+  const body=document.getElementById('body-ed').value||'';
+  req.payloads.push({id:genId(),name:name.trim(),body});
+  activePayloadIdx=req.payloads.length-1;
+  req.activePayload=activePayloadIdx;
+  saveS();
+  renderPayloadSlots(req);
+  document.getElementById('multi-payload-mgr').style.display='block';
+}
+
+function activatePayload(idx){
+  if(curColIdx===null||curReqIdx===null)return;
+  const req=S.api.collections[curColIdx].requests[curReqIdx];
+  // save current body back to old active payload first
+  if(activePayloadIdx!==null&&req.payloads&&req.payloads[activePayloadIdx]){
+    req.payloads[activePayloadIdx].body=document.getElementById('body-ed').value||'';
+  }
+  activePayloadIdx=idx;
+  req.activePayload=idx;
+  const body=req.payloads[idx].body||'';
+  S.api.body=body;
+  document.getElementById('body-ed').value=body;
+  saveS();
+  renderPayloadSlots(req);
+}
+
+function deletePayloadSlot(idx){
+  if(curColIdx===null||curReqIdx===null)return;
+  const req=S.api.collections[curColIdx].requests[curReqIdx];
+  req.payloads.splice(idx,1);
+  if(activePayloadIdx===idx){activePayloadIdx=null;req.activePayload=null;}
+  else if(activePayloadIdx>idx){activePayloadIdx--;req.activePayload=activePayloadIdx;}
+  saveS();
+  renderPayloadSlots(req);
+}
+
+// ── cURL GENERATION ──
+function buildCurlPayload(){
+  capAPI();
+  const headers={};
+  (S.api.headers||[]).filter(h=>h.enabled&&h.key).forEach(h=>headers[h.key]=h.value);
+  const auth=S.api.authData||{};
+  if(auth.type==='basic'&&auth.u) headers['Authorization']='Basic '+btoa(auth.u+':'+(auth.p||''));
+  else if(auth.type==='bearer'&&auth.token) headers['Authorization']='Bearer '+auth.token;
+  else if(auth.type==='apikey'&&auth.kn&&auth.ki==='header') headers[auth.kn]=auth.kv||'';
+  else if(auth.type==='oauth2'&&apiEnv['oauth_token']) headers['Authorization']='Bearer '+apiEnv['oauth_token'];
+
+  let url=S.api.url||'';
+  const qp=(S.api.params||[]).filter(p=>p.enabled&&p.key).map(p=>encodeURIComponent(p.key)+'='+encodeURIComponent(p.value)).join('&');
+  if(qp) url+=(url.includes('?')?'&':'?')+qp;
+  if(auth.type==='apikey'&&auth.ki==='query') url+=(url.includes('?')?'&':'?')+encodeURIComponent(auth.kn||'')+'='+encodeURIComponent(auth.kv||'');
+
+  let body=null;
+  const bt=S.api.bodyType;
+  if(bt==='json'){headers['Content-Type']=headers['Content-Type']||'application/json';body=S.api.body;}
+  else if(bt==='xml'){headers['Content-Type']=headers['Content-Type']||'application/xml';body=S.api.body;}
+  else if(bt==='text'){headers['Content-Type']=headers['Content-Type']||'text/plain';body=S.api.body;}
+  else if(bt==='form'||bt==='formdata'){
+    const fd=new URLSearchParams();
+    (S.api.form||[]).filter(f=>f.enabled&&f.key).forEach(f=>fd.append(f.key,f.value));
+    headers['Content-Type']='application/x-www-form-urlencoded';body=fd.toString();
+  }
+  if(S.api.ssl===false) headers['__insecure__']=true;
+  return {url,method:S.api.method||'GET',headers,body};
+}
+
+function buildCurlStr(){
+  const {url,method,headers,body}=buildCurlPayload();
+  let cmd=`curl -X ${method} "${url}"`;
+  if(S.api.ssl===false) cmd+=' --insecure';
+  const hdrs={...headers};
+  delete hdrs['__insecure__'];
+  Object.entries(hdrs).forEach(([k,v])=>{ cmd+=` \\\n  -H "${k.replace(/"/g,'\\"')}: ${String(v).replace(/"/g,'\\"')}"`; });
+  if(body){ const b=body.replace(/'/g,"'\\''"); cmd+=` \\\n  --data '${b}'`; }
+  return cmd;
+}
+
+function showCurlModal(){
+  const cmd=buildCurlStr();
+  document.getElementById('curl-output').textContent=cmd;
+  document.getElementById('curl-overlay').style.display='flex';
+}
+function closeCurlModal(){document.getElementById('curl-overlay').style.display='none';}
+function copyCurl(){
+  navigator.clipboard.writeText(document.getElementById('curl-output').textContent)
+    .then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy',1500);});
+}
+
+// ── BRUNO EXPORT ──
+function buildBrunoContent(req, payloadBody){
+  const method=(req.method||'GET').toLowerCase();
+  let bru=`meta {\n  name: ${req.name||'Request'}\n  type: http\n  seq: 1\n}\n\n`;
+  bru+=`http {\n  method: ${method.toUpperCase()}\n  url: ${req.url||''}\n}\n\n`;
+
+  // Headers
+  const hdrs=(req.headers||[]).filter(h=>h.enabled&&h.key);
+  if(hdrs.length){
+    bru+=`headers {\n`;
+    hdrs.forEach(h=>bru+=`  ${h.key}: ${h.value}\n`);
+    bru+=`}\n\n`;
+  }
+
+  // Auth
+  const auth=req.authData||{};
+  if(auth.type==='basic'&&auth.u){
+    bru+=`auth:basic {\n  username: ${auth.u}\n  password: ${auth.p||''}\n}\n\n`;
+  } else if(auth.type==='bearer'&&auth.token){
+    bru+=`auth:bearer {\n  token: ${auth.token}\n}\n\n`;
+  }
+
+  // Body
+  const body=payloadBody!==undefined?payloadBody:(req.body||'');
+  const bt=req.bodyType||'none';
+  if(bt==='json'&&body){
+    bru+=`body:json {\n${body}\n}\n\n`;
+  } else if(bt==='xml'&&body){
+    bru+=`body:xml {\n${body}\n}\n\n`;
+  } else if(bt==='text'&&body){
+    bru+=`body:text {\n${body}\n}\n\n`;
+  } else if((bt==='form'||bt==='formdata')&&(req.form||[]).length){
+    bru+=`body:form-urlencoded {\n`;
+    (req.form||[]).filter(f=>f.enabled&&f.key).forEach(f=>bru+=`  ${f.key}=${f.value}\n`);
+    bru+=`}\n\n`;
+  }
+
+  // Query params
+  const params=(req.params||[]).filter(p=>p.enabled&&p.key);
+  if(params.length){
+    bru+=`query {\n`;
+    params.forEach(p=>bru+=`  ${p.key}: ${p.value}\n`);
+    bru+=`}\n\n`;
+  }
+
+  return bru;
+}
+
+function exportBruno(){
+  capAPI();
+  // Build a request object from current state
+  const req={name:S.api.url||'Request',method:S.api.method,url:S.api.url,params:S.api.params,
+    headers:S.api.headers,bodyType:S.api.bodyType,body:S.api.body,form:S.api.form,
+    authType:S.api.authType,authData:S.api.authData};
+
+  let payloadBody=S.api.body;
+  // If in a collection request with multiple payloads, ask which one
+  if(curColIdx!==null&&curReqIdx!==null){
+    const creq=S.api.collections[curColIdx].requests[curReqIdx];
+    const pls=creq.payloads||[];
+    if(pls.length>1){
+      const names=pls.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
+      const choice=prompt(`Which payload to export?\n${names}\n\nEnter number (default: active):`);
+      if(choice){const ci=parseInt(choice)-1;if(ci>=0&&ci<pls.length)payloadBody=pls[ci].body;}
+      else if(activePayloadIdx!==null&&pls[activePayloadIdx]) payloadBody=pls[activePayloadIdx].body;
+    } else if(pls.length===1) payloadBody=pls[0].body;
+  }
+
+  const content=buildBrunoContent(req,payloadBody);
+  dlFile((req.name||'request').replace(/[^a-zA-Z0-9_-]/g,'_')+'.bru', content, 'text/plain');
+}
+
+function exportBrunoFor(ci,ri){
+  const req=S.api.collections[ci].requests[ri];
+  const pls=req.payloads||[];
+  let payloadBody=req.body||'';
+  if(pls.length>1){
+    const names=pls.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
+    const choice=prompt(`Which payload to export?\n${names}\n\nEnter number (default: active):`);
+    if(choice){const ci2=parseInt(choice)-1;if(ci2>=0&&ci2<pls.length)payloadBody=pls[ci2].body;}
+    else if(req.activePayload!==null&&pls[req.activePayload]) payloadBody=pls[req.activePayload].body;
+  } else if(pls.length===1) payloadBody=pls[0].body;
+  const content=buildBrunoContent(req,payloadBody);
+  dlFile((req.name||'request').replace(/[^a-zA-Z0-9_-]/g,'_')+'.bru', content, 'text/plain');
+}
+
+// ── BRUNO IMPORT ──
+function importBrunoFile(){
+  document.getElementById('bruno-import-input').value='';
+  document.getElementById('bruno-import-input').click();
+}
+
+function onBrunoFileSelected(evt){
+  const file=evt.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>parseBrunoFile(file.name.replace('.bru',''),e.target.result);
+  reader.readAsText(file);
+}
+
+function parseBrunoFile(filename, text){
+  const req={id:genId(),name:filename,method:'GET',url:'',params:[],headers:[],bodyType:'none',body:'',form:[],authType:'none',authData:{},pre:'',payloads:[],activePayload:null};
+  const lines=text.split('\n');
+  let section=null;
+  let bodyLines=[];
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const trimmed=line.trim();
+    if(trimmed.endsWith('{')&&!trimmed.startsWith('//')){
+      section=trimmed.slice(0,-1).trim(); bodyLines=[];
+      continue;
+    }
+    if(trimmed==='}'){
+      if(section==='body:json'||section==='body:xml'||section==='body:text'){
+        req.bodyType=section.split(':')[1];
+        req.body=bodyLines.join('\n');
+      } else if(section==='body:form-urlencoded'){
+        req.bodyType='form';
+        req.form=bodyLines.filter(l=>l.includes('=')).map(l=>{const[k,...v]=l.split('=');return{key:k.trim(),value:v.join('=').trim(),enabled:true};});
+      } else if(section==='headers'){
+        req.headers=bodyLines.filter(l=>l.includes(':')).map(l=>{const[k,...v]=l.split(':');return{key:k.trim(),value:v.join(':').trim(),enabled:true};});
+      } else if(section==='auth:basic'){
+        req.authType='basic';
+        const u=bodyLines.find(l=>l.trim().startsWith('username:'));
+        const p=bodyLines.find(l=>l.trim().startsWith('password:'));
+        req.authData={type:'basic',u:u?u.split(':').slice(1).join(':').trim():'',p:p?p.split(':').slice(1).join(':').trim():''};
+      } else if(section==='auth:bearer'){
+        req.authType='bearer';
+        const t=bodyLines.find(l=>l.trim().startsWith('token:'));
+        req.authData={type:'bearer',token:t?t.split(':').slice(1).join(':').trim():''};
+      } else if(section==='query'){
+        req.params=bodyLines.filter(l=>l.includes(':')).map(l=>{const[k,...v]=l.split(':');return{key:k.trim(),value:v.join(':').trim(),enabled:true};});
+      } else if(section==='http'){
+        const mu=bodyLines.find(l=>l.trim().startsWith('url:'));
+        const mm=bodyLines.find(l=>l.trim().startsWith('method:'));
+        if(mu) req.url=mu.split(':').slice(1).join(':').trim();
+        if(mm) req.method=mm.split(':')[1].trim().toUpperCase();
+      }
+      section=null; bodyLines=[];
+      continue;
+    }
+    if(section) bodyLines.push(trimmed);
+  }
+
+  // Ask which collection
+  const colNames=(S.api.collections||[]).map(c=>c.name);
+  let ci=-1;
+  if(colNames.length){
+    const chosen=prompt(`Import "${req.name}" into collection:\n${colNames.map((n,i)=>`${i+1}. ${n}`).join('\n')}\n\nEnter number or leave blank for Uncollected:`);
+    if(chosen){ci=parseInt(chosen)-1;}
+  }
+  if(ci>=0&&ci<S.api.collections.length){
+    S.api.collections[ci].requests.push(req);
+    S.api.collections[ci].open=true;
+  } else {
+    S.api.saved.push({...req});
+  }
+  saveS(); renderSaved();
+  alert(`Imported "${req.name}" successfully!`);
+}
+
+// ── SCHEDULER ──
+async function startScheduler(){
+  capAPI();
+  const interval=parseInt(document.getElementById('sched-interval').value)||300;
+  const maxTime=parseInt(document.getElementById('sched-maxtime').value)||3600;
+  if(interval<5){alert('Minimum interval is 5 seconds.');return;}
+
+  // Build request payload
+  const headers={};
+  (S.api.headers||[]).filter(h=>h.enabled&&h.key).forEach(h=>headers[h.key]=h.value);
+  const auth=S.api.authData||{};
+  if(auth.type==='basic'&&auth.u) headers['Authorization']='Basic '+btoa(auth.u+':'+(auth.p||''));
+  else if(auth.type==='bearer'&&auth.token) headers['Authorization']='Bearer '+auth.token;
+  else if(auth.type==='apikey'&&auth.kn&&auth.ki==='header') headers[auth.kn]=auth.kv||'';
+  let url=S.api.url;
+  const qp=(S.api.params||[]).filter(p=>p.enabled&&p.key).map(p=>encodeURIComponent(p.key)+'='+encodeURIComponent(p.value)).join('&');
+  if(qp) url+=(url.includes('?')?'&':'?')+qp;
+  let body=null;
+  const bt=S.api.bodyType;
+  if(bt==='json'){headers['Content-Type']='application/json';body=S.api.body;}
+  else if(bt==='xml'){headers['Content-Type']='application/xml';body=S.api.body;}
+  else if(bt==='text'){headers['Content-Type']='text/plain';body=S.api.body;}
+  else if(bt==='form'||bt==='formdata'){
+    const fd=new URLSearchParams();
+    (S.api.form||[]).filter(f=>f.enabled&&f.key).forEach(f=>fd.append(f.key,f.value));
+    headers['Content-Type']='application/x-www-form-urlencoded';body=fd.toString();
+  }
+
+  const reqData={url,method:S.api.method||'GET',headers,body,sslVerify:S.api.ssl!==false};
+  const r=await post('/api/scheduler/start',{interval,maxTime,request:reqData});
+  if(r.success){
+    curSchedId=r.id;
+    setSchedBadge('running');
+    showSchedLog();
+    startSchedPoll();
+  } else alert('Failed to start scheduler: '+r.error);
+}
+
+async function stopScheduler(){
+  if(!curSchedId){alert('No active scheduler.');return;}
+  await post('/api/scheduler/stop',{id:curSchedId});
+  setSchedBadge('stopping');
+}
+
+function startSchedPoll(){
+  if(schedPollTimer)clearInterval(schedPollTimer);
+  schedPollTimer=setInterval(pollSched,2000);
+}
+
+async function pollSched(){
+  if(!curSchedId)return;
+  try{
+    const r=await post('/api/scheduler/status',{id:curSchedId});
+    if(r.success){
+      setSchedBadge(r.status);
+      const logEl=document.getElementById('sched-log');
+      if(r.logs&&r.logs.length){
+        logEl.innerHTML=r.logs.map(l=>`<span style="color:${l.ok?'#3fb950':'#f85149'}">[${l.t}] ${esc(l.msg)}</span>`).join('\n');
+        logEl.scrollTop=logEl.scrollHeight;
+      }
+      if(r.status==='done'||r.status==='stopped'){clearInterval(schedPollTimer);schedPollTimer=null;}
+    }
+  }catch(e){}
+}
+
+function showSchedLog(){
+  document.getElementById('sched-log').style.display='block';
+}
+
+function setSchedBadge(status){
+  const el=document.getElementById('sched-status-badge');
+  const map={running:'sb-run',stopping:'sb-run',stopped:'sb-stop',done:'sb-done'};
+  const labels={running:'● Running',stopping:'● Stopping…',stopped:'■ Stopped',done:'✓ Done'};
+  el.className='sched-badge '+(map[status]||'sb-stop');
+  el.textContent=labels[status]||status;
+}
+
+function swRespTab(name) {
+  document.querySelectorAll('.resp-tab').forEach((t,i)=>t.classList.toggle('active',['body','headers','multi'][i]===name));
+  document.getElementById('rt-body').style.display=name==='body'?'block':'none';
+  document.getElementById('rt-headers').style.display=name==='headers'?'block':'none';
+  document.getElementById('rt-multi').style.display=name==='multi'?'block':'none';
+}
+
+function setBodyT(t,btn,noSave) {
+  curBodyType=t;
+  document.querySelectorAll('.btype-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else document.querySelectorAll('.btype-btn').forEach(b=>{ if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('active'); });
+  document.getElementById('body-none').style.display=t==='none'?'block':'none';
+  document.getElementById('body-ed').style.display=(t==='json'||t==='xml'||t==='text')?'flex':'none';
+  document.getElementById('body-form').style.display=(t==='form'||t==='formdata')?'block':'none';
+  // Show multi-payload manager when a body type is selected and we're in a collection request
+  if(t!=='none'&&curColIdx!==null&&curReqIdx!==null){
+    const req=S.api.collections[curColIdx].requests[curReqIdx];
+    renderPayloadSlots(req);
+  } else if(t==='none'){
+    document.getElementById('multi-payload-mgr').style.display='none';
+  }
+  if(!noSave) capAPI();
+}
+
+function addKV(tbId,k,v,en) {
+  const tbody=document.getElementById(tbId);
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="checkbox" ${en!==false?'checked':''}></td>
+    <td><input class="kv-in" type="text" placeholder="Key" value="${esc(k||'')}" oninput="capAPI()"></td>
+    <td><input class="kv-in" type="text" placeholder="Value" value="${esc(v||'')}" oninput="capAPI()"></td>
+    <td><button class="del-row" onclick="this.closest('tr').remove();capAPI()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+function fillKVs(tbId,rows){
+  document.getElementById(tbId).innerHTML='';
+  (rows||[]).forEach(r=>addKV(tbId,r.key,r.value,r.enabled));
+}
+function getKVs(tbId){
+  const rows=[];
+  document.getElementById(tbId).querySelectorAll('tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input[type=text]');
+    const cb=tr.querySelector('input[type=checkbox]');
+    if(ins.length>=2) rows.push({key:ins[0].value,value:ins[1].value,enabled:cb?.checked!==false});
+  });
+  return rows;
+}
+
+function renderAuth() {
+  const t=document.getElementById('auth-type').value;
+  let html='';
+  if(t==='basic') html=`
+    <div class="auth-field-group"><label>Username</label><input id="au-u" placeholder="username" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Password</label><input type="password" id="au-p" placeholder="password" oninput="capAPI()"></div>`;
+  else if(t==='bearer') html=`
+    <div class="auth-field-group"><label>Token</label><input id="au-t" placeholder="Bearer token…" oninput="capAPI()"></div>`;
+  else if(t==='oauth2') html=`
+    <div class="auth-field-group"><label>Token URL</label><input id="au-tu" placeholder="https://auth.server/token" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Client ID</label><input id="au-ci" placeholder="client_id" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Client Secret</label><input type="password" id="au-cs" placeholder="client_secret" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Scope</label><input id="au-sc" placeholder="read write" oninput="capAPI()"></div>
+    <button class="btn btn-secondary btn-sm" onclick="getOAuth()" style="margin-top:6px">Get Token</button>
+    <div id="au-tok" style="margin-top:8px;font-family:var(--mono);font-size:11px;color:#86efac;word-break:break-all"></div>`;
+  else if(t==='apikey') html=`
+    <div class="auth-field-group"><label>Key Name</label><input id="au-kn" placeholder="X-API-Key" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Key Value</label><input id="au-kv" placeholder="your-api-key" oninput="capAPI()"></div>
+    <div class="auth-field-group"><label>Add To</label>
+      <select id="au-ki" onchange="capAPI()" style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:7px 10px;font-size:12px;outline:none;max-width:200px">
+        <option value="header">Header</option><option value="query">Query Param</option>
+      </select></div>`;
+  document.getElementById('auth-fields').innerHTML=html;
+}
+
+function getAuthD() {
+  const t=document.getElementById('auth-type').value;
+  const d={type:t};
+  if(t==='basic'){d.u=v('au-u');d.p=v('au-p');}
+  else if(t==='bearer'){d.token=v('au-t');}
+  else if(t==='oauth2'){d.tu=v('au-tu');d.ci=v('au-ci');d.cs=v('au-cs');d.sc=v('au-sc');}
+  else if(t==='apikey'){d.kn=v('au-kn');d.kv=v('au-kv');d.ki=v('au-ki');}
+  return d;
+}
+function v(id){return document.getElementById(id)?.value||'';}
+
+function restoreAuthD(d){
+  if(!d||!d.type)return;
+  document.getElementById('auth-type').value=d.type; renderAuth();
+  setTimeout(()=>{
+    if(d.type==='basic'){sv('au-u',d.u);sv('au-p',d.p);}
+    else if(d.type==='bearer'){sv('au-t',d.token);}
+    else if(d.type==='oauth2'){sv('au-tu',d.tu);sv('au-ci',d.ci);sv('au-cs',d.cs);sv('au-sc',d.sc);}
+    else if(d.type==='apikey'){sv('au-kn',d.kn);sv('au-kv',d.kv);sv('au-ki',d.ki);}
+  },40);
+}
+function sv(id,val){const el=document.getElementById(id);if(el&&val)el.value=val;}
+
+async function getOAuth() {
+  const d=getAuthD();
+  if(!d.tu){alert('Token URL required.');return;}
+  const params=new URLSearchParams({grant_type:'client_credentials',client_id:d.ci,client_secret:d.cs});
+  if(d.sc)params.set('scope',d.sc);
+  const r=await post('/api/proxy',{url:d.tu,method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString(),sslVerify:S.api.ssl});
+  if(r.success){
+    try{const j=JSON.parse(r.body);const tok=j.access_token||r.body;document.getElementById('au-tok').textContent=tok;apiEnv['oauth_token']=tok;}
+    catch(e){document.getElementById('au-tok').textContent=r.body;}
+  } else document.getElementById('au-tok').textContent='Error: '+r.error;
+}
+
+async function sendReq() {
+  capAPI();
+  const pre=S.api.pre?.trim();
+  if(pre){try{const pm={env:{set:(k,v)=>apiEnv[k]=v,get:k=>apiEnv[k]}};new Function('pm',pre)(pm);}catch(e){}}
+
+  const count=Math.max(1,Math.min(100,S.api.cnt||1));
+  const btn=document.getElementById('send-btn');
+  btn.disabled=true;
+  document.getElementById('send-txt').textContent='Sending…';
+
+  // Build request
+  const headers={};
+  (S.api.headers||[]).filter(h=>h.enabled&&h.key).forEach(h=>headers[h.key]=h.value);
+  const auth=S.api.authData||{};
+  if(auth.type==='basic'&&auth.u) headers['Authorization']='Basic '+btoa(auth.u+':'+(auth.p||''));
+  else if(auth.type==='bearer'&&auth.token) headers['Authorization']='Bearer '+auth.token;
+  else if(auth.type==='apikey'&&auth.kn&&auth.ki==='header') headers[auth.kn]=auth.kv||'';
+  else if(auth.type==='oauth2'&&apiEnv['oauth_token']) headers['Authorization']='Bearer '+apiEnv['oauth_token'];
+
+  let url=S.api.url;
+  const qp=(S.api.params||[]).filter(p=>p.enabled&&p.key).map(p=>encodeURIComponent(p.key)+'='+encodeURIComponent(p.value)).join('&');
+  if(qp) url+=(url.includes('?')?'&':'?')+qp;
+  if(auth.type==='apikey'&&auth.ki==='query') url+=(url.includes('?')?'&':'?')+encodeURIComponent(auth.kn||'')+'='+encodeURIComponent(auth.kv||'');
+
+  let body=null;
+  const bt=S.api.bodyType;
+  if(bt==='json'){headers['Content-Type']=headers['Content-Type']||'application/json';body=S.api.body;}
+  else if(bt==='xml'){headers['Content-Type']=headers['Content-Type']||'application/xml';body=S.api.body;}
+  else if(bt==='text'){headers['Content-Type']=headers['Content-Type']||'text/plain';body=S.api.body;}
+  else if(bt==='form'){
+    const fd=new URLSearchParams();
+    (S.api.form||[]).filter(f=>f.enabled&&f.key).forEach(f=>fd.append(f.key,f.value));
+    headers['Content-Type']='application/x-www-form-urlencoded';body=fd.toString();
+  } else if(bt==='formdata'){
+    body=(S.api.form||[]).filter(f=>f.enabled&&f.key).map(f=>encodeURIComponent(f.key)+'='+encodeURIComponent(f.value)).join('&');
+  }
+
+  const payload={url,method:S.api.method,headers,body,sslVerify:S.api.ssl,timeout:30};
+
+  document.getElementById('resp-area').style.display='flex';
+  document.getElementById('rt-body').textContent='';
+  document.getElementById('rt-headers').innerHTML='';
+  document.getElementById('rt-multi').innerHTML='';
+
+  try {
+    if(count===1){
+      const r=await post('/api/proxy',payload);
+      if(r.success) showResp(r);
+      else{
+        document.getElementById('resp-hdr').innerHTML=`<span style="color:var(--danger)">✕ ${esc(r.error)}</span>`;
+        document.getElementById('rt-body').textContent=r.error;
+      }
+    } else {
+      swRespTab('multi');
+      const promises=Array.from({length:count},()=>post('/api/proxy',payload).catch(e=>({success:false,error:e.message})));
+      const results=await Promise.all(promises);
+      const good=results.filter(r=>r.success);
+      const bad=results.filter(r=>!r.success);
+      const times=good.map(r=>r.time||0);
+      const avg=times.length?Math.round(times.reduce((a,b)=>a+b,0)/times.length):0;
+      document.getElementById('resp-hdr').innerHTML=
+        `<span>Multi-Send: ${count}</span>
+         <span style="color:var(--success)">${good.length} ok</span>
+         <span style="color:var(--danger)">${bad.length} err</span>
+         <span style="color:var(--muted)">avg ${avg}ms | min ${times.length?Math.min(...times):0}ms | max ${times.length?Math.max(...times):0}ms</span>`;
+      window._multiResults=results;
+      let html='';
+      results.forEach((r,i)=>{
+        if(!r.success) html+=`<div class="multi-item"><span style="color:var(--muted)">#${i+1}</span><span style="color:var(--danger)">ERR</span><span style="flex:1">${esc(r.error||'')}</span></div>`;
+        else{const cls=r.status<300?'var(--success)':r.status<500?'var(--warning)':'var(--danger)';
+          html+=`<div class="multi-item"><span style="color:var(--muted)">#${i+1}</span><span style="color:${cls}">${r.status}</span><span style="color:var(--muted)">${r.time}ms</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${esc((r.body||'').substring(0,80))}</span><button onclick="copyRespBodyIdx(${i})" style="padding:2px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;cursor:pointer;flex-shrink:0" title="Copy">📋</button><button onclick="showResp(window._multiResults[${i}],true)" style="padding:2px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;cursor:pointer;flex-shrink:0" title="View">👁</button></div>`;}
+      });
+      document.getElementById('rt-multi').innerHTML=html;
+      if(good.length) showResp(good[0],false);
+    }
+  } finally {
+    btn.disabled=false; document.getElementById('send-txt').textContent='Send';
+  }
+}
+function copyText(t){navigator.clipboard.writeText(t).then(()=>{}).catch(()=>{});}
+function copyRespBody(){const t=document.getElementById('rt-body').textContent;copyText(t);}
+function copyRespBodyIdx(i){const r=window._multiResults&&window._multiResults[i];if(r)copyText(r.body||'');}
+function showResp(r,switchTab=true){
+  const cls=r.status<300?'s2xx':r.status<400?'s3xx':r.status<500?'s4xx':'s5xx';
+  document.getElementById('resp-hdr').innerHTML=
+    `<span class="status-badge ${cls}">${r.status} ${r.statusText||''}</span>
+     <span style="color:var(--muted)">${r.time}ms</span>
+     <span style="color:var(--muted)">${r.size!=null?r.size+' B':''}</span>
+     <button onclick="copyRespBody()" style="margin-left:auto;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:10px;cursor:pointer" title="Copy response body">📋 Copy</button>`;
+  let body=r.body||'';
+  try{body=JSON.stringify(JSON.parse(body),null,2);}catch(e){}
+  document.getElementById('rt-body').textContent=body;
+  let th='<table><thead><tr><th>Header</th><th>Value</th></tr></thead><tbody>';
+  Object.entries(r.headers||{}).forEach(([k,v])=>th+=`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`);
+  th+='</tbody></table>';
+  document.getElementById('rt-headers').innerHTML=th;
+  if(switchTab) swRespTab('body');
+}
+
+// ─────────────────────────────────────────────
+// SOLACE
+// ─────────────────────────────────────────────
+function restoreSol(){
+  const s=S.sol||{};
+  document.getElementById('sol-host').value=s.host||'';
+  document.getElementById('sol-vpn').value=s.vpn||'';
+  document.getElementById('sol-user').value=s.user||'';
+  document.getElementById('sol-pass').value=s.pass||'';
+  document.getElementById('sol-type').value=s.type||'queue';
+  document.getElementById('sol-dest').value=s.dest||'';
+  document.getElementById('sol-body').value=s.body||'';
+  document.getElementById('sol-ct').value=s.ct||'application/json';
+}
+function saveSol(){
+  S.sol={host:v('sol-host'),vpn:v('sol-vpn'),user:v('sol-user'),pass:v('sol-pass'),
+    type:document.getElementById('sol-type').value,dest:v('sol-dest'),
+    body:v('sol-body'),ct:document.getElementById('sol-ct').value};
+  saveS();
+}
+function solLog(msg,cls){
+  const el=document.getElementById('sol-log');
+  const t=new Date().toLocaleTimeString();
+  el.innerHTML+=`<span class="${cls||''}">[${t}] ${esc(msg)}</span>\n`;
+  el.scrollTop=el.scrollHeight;
+}
+async function solPublish(){
+  saveSol();
+  const s=S.sol;
+  if(!s.host||!s.dest){solLog('Host and destination required.','le');return;}
+  solLog('Publishing to '+s.type+': '+s.dest,'li');
+  try{
+    const r=await post('/api/solace/publish',{...s,sslVerify:S.api?.ssl!==false});
+    if(r.success) solLog('✓ Published. URL: '+r.url+' | '+r.message,'ls');
+    else solLog('✕ Failed: '+r.error+(r.url?' | URL: '+r.url:''),'le');
+  }catch(e){solLog('✕ Error: '+e.message,'le');}
+}
+async function solTest(){
+  saveSol();
+  const s=S.sol; if(!s.host){solLog('Host required.','le');return;}
+  solLog('Testing connection to '+s.host+'…','li');
+  try{
+    const r=await post('/api/proxy',{url:s.host,method:'GET',headers:{},sslVerify:S.api?.ssl!==false,timeout:5});
+    if(r.success) solLog('✓ Host reachable - HTTP '+r.status,'ls');
+    else solLog('Response: '+r.error,'lw');
+  }catch(e){solLog('✕ '+e.message,'le');}
+}
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function dlFile(name,content,type){const b=new Blob([content],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+async function post(path,data){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  return r.json();
+}
+
+function showCtx(x,y,items){
+  const el=document.getElementById('ctx'); el.innerHTML='';
+  items.forEach(item=>{
+    const d=document.createElement('div'); d.className='ctx-item'+(item.cls?' '+item.cls:'');
+    d.textContent=item.label; d.onclick=()=>{hideCtx();item.action();};
+    el.appendChild(d);
+  });
+  el.style.display='block';
+  const vw=window.innerWidth,vh=window.innerHeight;
+  el.style.left=Math.min(x,vw-170)+'px'; el.style.top=Math.min(y,vh-items.length*36-10)+'px';
+}
+function hideCtx(){document.getElementById('ctx').style.display='none';}
+
+function showModal(title,ph,onOk,def){
+  document.getElementById('modal-t').textContent=title;
+  document.getElementById('modal-in').placeholder=ph;
+  document.getElementById('modal-in').value=def||'';
+  document.getElementById('modal-ov').style.display='flex';
+  document.getElementById('modal-ok').onclick=()=>{onOk(document.getElementById('modal-in').value);closeModal();};
+  document.getElementById('modal-in').onkeydown=(e)=>{if(e.key==='Enter'){onOk(document.getElementById('modal-in').value);closeModal();}};
+  setTimeout(()=>document.getElementById('modal-in').focus(),50);
+}
+function closeModal(){document.getElementById('modal-ov').style.display='none';}
+
+document.addEventListener('click',hideCtx);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideCtx();closeModal();closeCurlModal();}});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+(async()=>{
+await loadS();
+if(!S.notes.nbs.length){
+  S.notes.nbs.push({name:'My Notebook',pages:[{title:'Welcome',content:'Welcome to NoteCraft!\n\nCreate notebooks, pages, and start writing.'}]});
+  S.notes.curNB=0; S.notes.curPG=0; saveS();
+}
+sw(S.panel||'notes');
+})();
+
+// ─────────────────────────────────────────────
+// GROOVY CPI SIMULATOR
+// ─────────────────────────────────────────────
+(function(){
+  const DEFAULT_SCRIPT = `import com.sap.gateway.ip.core.customdev.util.Message;
+import java.util.HashMap;
+
+def Message processData(Message message) {
+    println "You can print and see the result in the console below"
+    //Body
+    def body = message.getBody(String);
+    message.setBody(body + " Body is modified");
+    //Headers
+    def map = message.getHeaders();
+    def value = map.get("oldHeader");
+    println "oldHeader value: " + value
+    message.setHeader("oldHeader", value + " modified");
+    message.setHeader("newHeader", "newHeader");
+    //Properties
+    map = message.getProperties();
+    value = map.get("oldProperty");
+    message.setProperty("oldProperty", value + " modified");
+    message.setProperty("newProperty", "newProperty");
+    return message;
+}`;
+
+  let gvState = {
+    script : DEFAULT_SCRIPT,
+    fn     : 'processData',
+    body   : '<root>Example Input Data</root>',
+    headers: [{k:'oldHeader', v:'Hello!'}],
+    props  : []
+  };
+
+  // ── Persist ──────────────────────────────────────────────────
+  function gvLoad() {
+    fetch('/api/storage/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'gv_state'})}).then(r=>r.json()).then(d=>{if(d.success&&d.value){gvState=Object.assign(gvState,d.value);gvRender();}}).catch(()=>{try{const s=localStorage.getItem('gv_state');if(s){gvState=Object.assign(gvState,JSON.parse(s));gvRender();}}catch(e){}});
+  }
+  window.gvSave = function() {
+    gvState.script  = document.getElementById('gv-script').value;
+    gvState.fn      = document.getElementById('gv-fn-name').value;
+    gvState.body    = document.getElementById('gv-in-body').value;
+    gvState.headers = gvGetKvs('gv-in-headers');
+    gvState.props   = gvGetKvs('gv-in-props');
+    fetch('/api/storage/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:'gv_state',value:gvState})}).catch(()=>{});
+    try{localStorage.setItem('gv_state',JSON.stringify(gvState));}catch(e){}
+  };
+
+  function gvRender() {
+    document.getElementById('gv-script').value  = gvState.script || DEFAULT_SCRIPT;
+    document.getElementById('gv-fn-name').value = gvState.fn     || 'processData';
+    document.getElementById('gv-in-body').value = gvState.body   || '';
+    gvRenderKvs('gv-in-headers', gvState.headers || [], 'hdr');
+    gvRenderKvs('gv-in-props',   gvState.props   || [], 'prop');
+  }
+
+  // ── KV helpers ───────────────────────────────────────────────
+  function gvGetKvs(id) {
+    return [...document.querySelectorAll('#'+id+' .gv-kv-row')].map(r => ({
+      k: r.querySelector('.gv-kv-key').value.trim(),
+      v: r.querySelector('.gv-kv-val').value
+    })).filter(x => x.k);
+  }
+  function gvRenderKvs(id, kvs) {
+    const c = document.getElementById(id); c.innerHTML = '';
+    (kvs||[]).forEach(({k,v}) => _appendKvRow(c,k,v));
+  }
+  function _appendKvRow(cont, k, v) {
+    const row = document.createElement('div'); row.className='gv-kv-row';
+    row.innerHTML = `<input class="gv-kv-key" placeholder="key" value="${_esc(k)}" oninput="gvSave()">
+      <input class="gv-kv-val" placeholder="value" value="${_esc(v)}" oninput="gvSave()">
+      <button class="gv-kv-rm" onclick="this.parentElement.remove();gvSave()">✕</button>`;
+    cont.appendChild(row);
+  }
+  window.gvAddKv = function(id) { _appendKvRow(document.getElementById(id),'',''); };
+  function _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── Groovy installation check ─────────────────────────────────
+  async function gvCheckInstall() {
+    const badge  = document.getElementById('gv-status-badge');
+    const banner = document.getElementById('gv-install-banner');
+    try {
+      const res  = await fetch('/api/groovy/check');
+      const data = await res.json();
+
+      if (data.groovyFound && data.runnerFound) {
+        badge.style.display      = 'block';
+        badge.style.background   = 'rgba(63,185,80,.15)';
+        badge.style.color        = 'var(--success)';
+        badge.style.border       = '1px solid var(--success)';
+        badge.textContent        = '✓ Groovy ' + (data.groovyPath.split(/[/\\]/).pop() || 'ready');
+        banner.style.display     = 'none';
+      } else if (!data.groovyFound) {
+        badge.style.display      = 'block';
+        badge.style.background   = 'rgba(248,81,73,.15)';
+        badge.style.color        = 'var(--danger)';
+        badge.style.border       = '1px solid var(--danger)';
+        badge.textContent        = '✗ Groovy not installed';
+        banner.style.display     = 'block';
+        banner.innerHTML = `<b>⚠ Groovy is not installed.</b> This simulator requires Groovy on your machine to execute scripts.
+
+Install options:
+  <b>Windows (Chocolatey):</b>  choco install groovy
+  <b>Windows (manual):</b>      Download from <a href="https://groovy.apache.org/download.html" target="_blank" style="color:var(--accent3)">groovy.apache.org</a> → extract → add bin\\ to PATH
+  <b>Ubuntu/Debian:</b>         sudo apt-get install groovy
+  <b>macOS:</b>                 brew install groovy
+
+After install, <b>restart app.py</b> and refresh this page.`;
+      } else if (!data.runnerFound) {
+        badge.style.display    = 'block';
+        badge.style.background = 'rgba(248,81,73,.15)';
+        badge.style.color      = 'var(--danger)';
+        badge.style.border     = '1px solid var(--danger)';
+        badge.textContent      = '✗ CpiRunner.groovy missing';
+        banner.style.display   = 'block';
+        banner.textContent     = `CpiRunner.groovy not found at:\n${data.runnerPath}\n\nMake sure the groovy_runner\\ folder is inside your notecraft_flask\\ project folder.`;
+      }
+    } catch(e) { /* silently skip if flask not ready */ }
+  }
+
+  // ── Execute ───────────────────────────────────────────────────
+  window.gvExecute = async function() {
+    gvSave();
+    const btn = document.getElementById('gv-exec-btn');
+    btn.textContent = '⏳ Running...'; btn.classList.add('running'); btn.disabled = true;
+
+    const hdrs = {}, props = {};
+    (gvState.headers||[]).forEach(({k,v}) => { if(k) hdrs[k]=v; });
+    (gvState.props  ||[]).forEach(({k,v}) => { if(k) props[k]=v; });
+
+    try {
+      const res  = await fetch('/api/groovy/execute', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          script: gvState.script, function: gvState.fn||'processData',
+          body: gvState.body, headers: hdrs, properties: props
+        })
+      });
+      const data = await res.json();
+      const con  = document.getElementById('gv-console');
+
+      if (data.success) {
+        // Console
+        con.style.color = '#86efac';
+        con.textContent = (data.console && data.console.length)
+          ? data.console.join('\n') : '(no console output)';
+        gvRenderOutput(data.output);
+      } else {
+        // Error — pretty-print, strip java internals
+        const cleaned = (data.error||'Unknown error')
+          .split('\n')
+          .filter(l => !l.match(/^\s+at (org\.|java\.|sun\.|com\.sun|groovy\.ui)/))
+          .join('\n').trim();
+        con.style.color = 'var(--danger)';
+        con.textContent = 'ERROR: ' + cleaned;
+        gvClearOutput();
+        const bodyEl = document.getElementById('gv-out-body');
+        bodyEl.className = '';
+        bodyEl.innerHTML = `<div class="gv-error-box">${_esc(cleaned)}</div>`;
+      }
+    } catch(e) {
+      document.getElementById('gv-console').style.color = 'var(--danger)';
+      document.getElementById('gv-console').textContent = 'Network error: ' + e;
+    } finally {
+      btn.textContent = '▶ Click to Execute Script (Alt+Enter)';
+      btn.classList.remove('running'); btn.disabled = false;
+    }
+  };
+
+  function gvClearOutput() {
+    ['gv-out-headers','gv-out-props','gv-out-log-props','gv-out-custom-hdr'].forEach(id=>{
+      const el = document.getElementById(id);
+      el.className = 'gv-out-empty'; el.textContent = 'empty';
+    });
+  }
+
+  function gvRenderOutput(out) {
+    if (!out) return;
+    const bodyEl = document.getElementById('gv-out-body');
+    bodyEl.className = 'gv-out-body-text';
+    bodyEl.textContent = out.body || '';
+    if (!out.body) { bodyEl.classList.add('gv-out-empty'); bodyEl.textContent='(empty)'; }
+
+    function renderKv(elId, obj) {
+      const el = document.getElementById(elId);
+      const entries = obj ? Object.entries(obj) : [];
+      if (!entries.length) { el.className='gv-out-empty'; el.textContent='empty'; return; }
+      el.className = '';
+      el.innerHTML = entries.map(([k,v])=>
+        `<div class="gv-out-kv"><span class="gv-ok">${_esc(k)}</span> <span style="color:var(--muted)">=</span> <span class="gv-ov">${_esc(String(v))}</span></div>`
+      ).join('');
+    }
+    renderKv('gv-out-headers',   out.headers);
+    renderKv('gv-out-props',     out.properties);
+    renderKv('gv-out-log-props', out.logProperties);
+    renderKv('gv-out-custom-hdr',out.customHeaderProperties);
+  }
+
+  // ── Keyboard shortcuts ────────────────────────────────────────
+  window.gvKeyDown = function(e) {
+    if (e.altKey && e.key==='Enter') { e.preventDefault(); gvExecute(); return; }
+    if (e.key==='Tab') {
+      e.preventDefault();
+      const ta=e.target, s=ta.selectionStart, end=ta.selectionEnd;
+      ta.value=ta.value.substring(0,s)+'    '+ta.value.substring(end);
+      ta.selectionStart=ta.selectionEnd=s+4;
+    }
+  };
+
+  // ── Copy Share URL ────────────────────────────────────────────
+  window.gvCopyShare = function() {
+    gvSave();
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify(gvState))));
+    const url = window.location.origin + window.location.pathname + '#gv=' + payload;
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.querySelector('.gv-share-btn');
+      const orig = btn.textContent;
+      btn.textContent='✓ Copied!'; btn.style.background='var(--success)';
+      setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; }, 2000);
+    });
+  };
+
+  // ── Load from URL hash ────────────────────────────────────────
+  function gvLoadFromHash() {
+    const h = window.location.hash;
+    if (h.startsWith('#gv=')) {
+      try { gvState = Object.assign(gvState, JSON.parse(decodeURIComponent(escape(atob(h.slice(4)))))); return true; }
+      catch(e){}
+    }
+    return false;
+  }
+
+  // ── Hook into panel switcher ──────────────────────────────────
+  const _origSw = window.sw;
+  window.sw = function(name) {
+    _origSw(name);
+    if (name === 'groovy') {
+      gvLoad(); gvLoadFromHash(); gvRender(); gvCheckInstall();
+    }
+  };
+
+  // Boot
+  gvLoad(); gvLoadFromHash();
+})();
+
+// ─────────────────────────────────────────────
+// JSON ↔ XML CONVERTER
+// ─────────────────────────────────────────────
+(function(){
+  let cvtDir = 'json2xml';
+
+  window.setCvtDir = function(dir, btn) {
+    cvtDir = dir;
+    document.querySelectorAll('#cvt-j2x-pill, #cvt-x2j-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const j2x = dir === 'json2xml';
+    document.getElementById('cvt-in-label').textContent  = j2x ? 'JSON Input'  : 'XML Input';
+    document.getElementById('cvt-out-label').textContent = j2x ? 'XML Output'  : 'JSON Output';
+    document.getElementById('cvt-in').placeholder        = j2x ? 'Paste JSON here…' : 'Paste XML here…';
+    document.getElementById('cvt-root-wrap').style.display = j2x ? '' : 'none';
+    document.getElementById('cvt-status').textContent = '';
+    document.getElementById('cvt-out').value = '';
+  };
+
+  window.doConvert = async function() {
+    const content = document.getElementById('cvt-in').value.trim();
+    const rootName = document.getElementById('cvt-root').value.trim() || 'root';
+    const statusEl = document.getElementById('cvt-status');
+    const outEl = document.getElementById('cvt-out');
+    if (!content) { statusEl.textContent = 'Nothing to convert.'; statusEl.style.color = 'var(--danger)'; return; }
+    statusEl.textContent = 'Converting…'; statusEl.style.color = 'var(--muted)';
+    try {
+      const r = await fetch('/api/convert', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ direction: cvtDir, content, rootName })
+      });
+      const data = await r.json();
+      if (data.success) {
+        outEl.value = data.result;
+        statusEl.textContent = '✓ Done'; statusEl.style.color = 'var(--success)';
+      } else {
+        outEl.value = '';
+        statusEl.textContent = '✗ ' + data.error; statusEl.style.color = 'var(--danger)';
+      }
+    } catch(e) {
+      statusEl.textContent = '✗ ' + e.message; statusEl.style.color = 'var(--danger)';
+    }
+  };
+
+  window.copyCvt = function() {
+    const txt = document.getElementById('cvt-out').value;
+    if (!txt) return;
+    navigator.clipboard.writeText(txt).then(() => {
+      const s = document.getElementById('cvt-status');
+      s.textContent = '✓ Copied!'; s.style.color = 'var(--success)';
+      setTimeout(() => { s.textContent = ''; }, 1500);
+    });
+  };
+
+  window.clearCvt = function() {
+    document.getElementById('cvt-in').value = '';
+    document.getElementById('cvt-out').value = '';
+    document.getElementById('cvt-status').textContent = '';
+  };
+
+  // Init labels on load
+  setCvtDir('json2xml', document.getElementById('cvt-j2x-pill'));
+})();
+
+// ── Postman-style resize for response panel ──────────────────
+(function(){
+  const handle=document.getElementById('resp-resize-handle');
+  const apiMain=document.querySelector('.api-main');
+  let dragging=false,startY=0,startRespH=0,startReqH=0;
+  handle.addEventListener('mousedown',e=>{
+    dragging=true;
+    startY=e.clientY;
+    const resp=document.getElementById('resp-area');
+    const reqContent=document.querySelector('.req-tab-content');
+    startRespH=resp.getBoundingClientRect().height;
+    startReqH=reqContent.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const delta=startY-e.clientY; // drag up = bigger response
+    const resp=document.getElementById('resp-area');
+    const reqContent=document.querySelector('.req-tab-content');
+    const newRespH=Math.max(80,startRespH+delta);
+    const newReqH=Math.max(60,startReqH-delta);
+    resp.style.height=newRespH+'px';
+    resp.style.maxHeight=newRespH+'px';
+    resp.style.flex='none';
+    reqContent.style.height=newReqH+'px';
+    reqContent.style.flex='none';
+  });
+  document.addEventListener('mouseup',()=>{
+    if(dragging){dragging=false;handle.classList.remove('dragging');}
+  });
+  // Show handle when resp-area becomes visible
+  const obs=new MutationObserver(()=>{
+    handle.style.display=document.getElementById('resp-area').style.display==='flex'?'block':'none';
+  });
+  obs.observe(document.getElementById('resp-area'),{attributes:true,attributeFilter:['style']});
+})();
+
+</script>
+</body>
+</html>
